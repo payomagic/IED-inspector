@@ -21,10 +21,11 @@ from .scl import SclModel
 from .simulator import Simulator
 from .streams import StreamTracker
 
-# PyInstaller one-file builds unpack data files to sys._MEIPASS
-BASE_DIR = getattr(sys, "_MEIPASS", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-WEB_DIR = os.path.join(BASE_DIR, "ied_inspector", "web")
-EXAMPLES_DIR = os.path.join(BASE_DIR, "examples")
+# Works from source, from a pip-installed wheel and from a PyInstaller one-file exe (sys._MEIPASS)
+PKG_DIR = os.path.join(sys._MEIPASS, "ied_inspector") if hasattr(sys, "_MEIPASS") \
+    else os.path.dirname(os.path.abspath(__file__))
+WEB_DIR = os.path.join(PKG_DIR, "web")
+EXAMPLES_DIR = os.path.join(PKG_DIR, "examples")
 CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".ied_inspector.json")
 
 

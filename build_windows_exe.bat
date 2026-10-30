@@ -45,14 +45,14 @@ if exist dist\IEDInspector.exe del /q dist\IEDInspector.exe
   --name IEDInspector ^
   --icon "assets\IEDInspector.ico" ^
   --add-data "ied_inspector\web;ied_inspector\web" ^
-  --add-data "examples;examples" ^
+  --add-data "ied_inspector\examples;ied_inspector\examples" ^
   --collect-submodules ied_inspector ^
   run.py || goto :fail
 
 rem ---- package next to the exe ---------------------------------------------------
 copy /y README.md dist\README.md >nul
 if not exist dist\examples mkdir dist\examples
-copy /y examples\*.scd dist\examples\ >nul
+copy /y ied_inspector\examples\*.scd dist\examples\ >nul
 if exist build rmdir /s /q build
 if exist IEDInspector.spec del /q IEDInspector.spec
 

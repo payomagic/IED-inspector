@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ied-inspector"
+dynamic = ["version"]
+description = "Read-only IEC 61850 MMS / GOOSE / SV inspection tool with SCD validation, VLAN checks, reports and an IED simulator"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Pavel Dvořák" }]
+keywords = ["IEC 61850", "MMS", "GOOSE", "sampled values", "SCD", "substation automation", "VLAN"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: System :: Networking :: Monitoring",
+]
+dependencies = []                   # standard library only
+
+# Fill in after creating the repository, e.g. https://github.com/<user>/ied-inspector
+# [project.urls]
+# Homepage = "https://github.com/<user>/ied-inspector"
+# Issues = "https://github.com/<user>/ied-inspector/issues"
+
+[project.scripts]
+ied-inspector = "ied_inspector.app:main"
+
+[tool.setuptools]
+packages = ["ied_inspector", "ied_inspector.web", "ied_inspector.examples"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"ied_inspector.web" = ["*.html"]
+"ied_inspector.examples" = ["*.scd"]
+
+[tool.setuptools.dynamic]
+version = { attr = "ied_inspector.__version__" }

@@ -2,6 +2,14 @@
 
 Read-only IEC 61850 inspection tool: MMS, GOOSE, Sampled Values, SCD validation, comparison, reports and an IED simulator. Runs in the browser and is served by a small local Python program. Nothing to install apart from Python.
 
+
+[![PyPI](https://img.shields.io/pypi/v/ied-inspector)](https://pypi.org/project/ied-inspector/) ![Python](https://img.shields.io/pypi/pyversions/ied-inspector) ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
+
+Install and start:
+
+    pip install ied-inspector
+    ied-inspector
+
 ## Start
 
 | | |
@@ -54,7 +62,7 @@ The built-in stack is our own implementation and contains no third-party code. A
 
 ## Try it without hardware
 
-1. SCD file tab → load `examples/demo_substation.scd`. It contains 4 IEDs and deliberately includes a few SCD errors.
+1. SCD file tab → load `ied_inspector/examples/demo_substation.scd (or the "Load demo SCD" button)`. It contains 4 IEDs and deliberately includes a few SCD errors.
 2. Simulator tab → start PROT_Q01 on 127.0.0.11, CTRL_Q01 on 127.0.0.21 and MU_Q01 on 127.0.0.31, each publishing on the loopback interface (Linux: `lo`; Windows: "Adapter for loopback traffic capture" from Npcap).
 3. Network tab → capture on the same interface.
 4. Connect tab → read 127.0.0.11, .21 and .31.
@@ -79,4 +87,18 @@ Notes for the target PC:
 - MMS, SCD, pcap analysis, reports and the simulator's MMS server need nothing extra.
 - Live capture and GOOSE/SV publishing need the Npcap driver (https://npcap.com). If Npcap was installed with "Restrict Npcap driver's access to Administrators only", start the exe with "Run as administrator".
 - Windows Firewall may ask about network access the first time the simulator's MMS server listens. Allow it on private networks only if other PCs should reach the simulator.
-- One-file executables unpack to a temporary folder at start, so the first start takes a few seconds. Some antivirus products flag unsigned PyInstaller executables; if that happens in your company, sign the exe with the company code-signing certificate or ask IT to whitelist it.
+- One-file executables unpack to a temporary folder at start, so the first start takes a few seconds. Some antivirus products flag unsigned PyInstaller executables; if that happens, sign the exe with a code-signing certificate or ask your IT department to whitelist it.
+
+## Disclaimer
+
+IED Inspector is an independent open-source project. It is not affiliated with, endorsed by or supported by ABB, OMICRON, MZ Automation or any other vendor. Product names such as ABB, Relion, REF615, RED670, CI868, AC 800M, IEDScout and libiec61850 are trademarks of their respective owners and are used here only to describe compatibility.
+
+Vendor-specific behaviour (ABB GSEGGIO1 counters, 670-series receive blocks, CI868 module limits) is based on public manuals and data sheets and has not been verified on every firmware version. The software is provided "as is" (see LICENSE). Use it on substation networks at your own responsibility. It is read-only by design, but capture and the simulator send and receive real network traffic.
+
+## Security
+
+The web interface listens on 127.0.0.1 only, unless you start it with `--host`. It has no login, so do not expose it to untrusted networks. Report security problems privately to the author instead of in a public issue.
+
+## License
+
+MIT © 2026 Pavel Dvořák
