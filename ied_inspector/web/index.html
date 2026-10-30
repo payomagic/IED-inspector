@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IED Inspector</title>
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAFjklEQVR4nMRXfUxTVxT/vfdaCpS2fBUQ5EucMkCUWkB0bsMJzsXo5j4SZQ7Usc0sJEsWTSRmZplO3TTuD5NluumMWaabUyCIX3OwTIeliDLjB8pk4iiUL2lLKS1t325vZ5nSwhub+ktuz73n3XPur+e+e+55IniBIk49ySl2TmedbArPQIz/AIbHkJN1Xh2yiy4N3q5rGfH8nwNZonoqw2A/wzDZeAjgeV7D8yg0tdQ33dNxf0tWlqRey4A5RBZPGMuRKCQMyqUFCErLgLWtFc5BC4SA+J5Ift/0C44ZtPXpNC5ONALSRFU6x7JaQsDPlzHPsgie9QxC5y+CPHMOGDKmeqcTRu059P5Yib7zP4Mh47HAg7c5nI4sc8vFRkIgxU8xKVBL6KV7m+wXPRFh+UsQmr8YYkWIRz/YoaPSPyraoxsy3EXvqQr0nCqHTffnWCwaDbe0KkaeoJrFcFztfQ/FYoTMnY/QvCWQpas8aqfNir5z1eg5WQbz5Qaqk05TIWzBiwiekwvWT+KZa/qtgRApQ9/ZM4TZkHcODkcOI0vKLCLB3HdPyQZKMXXXN5BEDv8zyx+/o7vqB9ytPg7ngNmrM5ddSO5ChL/wMgISkjz6QfKONJUUgLdaR9iQzVopYng+gYTfo5REx3kW7z1Tha6Kg7A0X8dYcBHrOXaYtoDJyVAuWYbQeQvhHxNHWjwst26MsHGtzY7mVOjiD8Jl01V+cFjB+l5GhMcMQQSYABEi31dDqoqAuaETOafPoTTPffa3V/pjQVc8npVKUWM2o0Sng5lkm/+VgDQ7CvLcWNp3yQ2BQ0iSuc/7h9MDEKWV0/5ShRyVRiOOmEwQise+BayQSWZNB4zVd+AwWKncVC7GTT1L28ZGC44YjOi1O6g82d+PfwNBEeAtdnRsOu8ZHyVXyFFNkGd8CG0YL0YQcJgMnj4nU2C84OTDtg6jAYIJ2PQ6V4oESc+QkCTSf1EDoXhp8SI8l/s00tNSwfoHoIVUEtp+Oy51tgsn4IJVdwf+sQk0gwlBTPQE7NiyCRkzpt2nV5KWRY5w9r7dWFf6AdraO0bYsr4IuCDLeopc2AxGA0citWvnJ3Txs7/WYvmKQqiycmgreKMItZo6qFUz8NmOrSQhssIIGGprqHRdtSFz8zAaVhe9jpTkqbjQcBFFq4pRp70Ao9FEm6auHisKV6Gx8TLSU1OwcsUyYQR6f6qCVe/et4jXCjEaFua7CX6x5yufc77cu5fK5/PmCyMA8hLqv99Pu4GJTyByebHXaSIRh+Qpk2m/tbUVvnCr5TaVT5JIMQ9sqc9E1Hu6AraebtqfUFBMK6LxwskPl2kcxwojALsdLZvXwjEwQIexJaWQZ899YIoD12800358fJxPV0mJiVQ23WymNsIIEFiarqB5w7uUhKsITVi/zb0dIs4z57uycirXvP2WTz/FxauprKg8NuIZJwmNjiLV8Cu+jO09XaS+05LTkA/OX0JqxJlQzJ4H89VGiMMjYCkogToiGKkxkcjKVKNN10ZOgBFB0kCkpaXg062bMVOVQX2FhYXjxKnTsFptbudOZhsjS5iZzHLsNYwBP3IkJ65ZB7l6Nh2TjwzPC6Uk6ewdkRFp4fKx3ODq9RsoKl4DAzmmZDcmcLa+9m4ShQwSheTRDB39JtytOUEK1GZIUzMgIkWoC7auTlzbvhEHPv4IHXq9q9yGgtQFA2TbajX1OPDtIUQolVCGh7nJEjlndg7O1FRX6a/8spv+hYCkzFjyRXKFdGUQAEYiQeSrReTOsKPz8AHwQ7ZR5yvkMny953OSsKZ4dO16/ZaMpKhSz6GUT1K/R0K6Ew8JXkisjwpitj7Sj9PQ0OD642WHuxVyuVkUhJVKhjF5vWn847MSxSL7jEfxef4XAAAA//+YSvVSAAAABklEQVQDABynAX1HNfRsAAAAAElFTkSuQmCC">
+<style>
+:root{
+  --panel:#e6eaed; --surface:#f7f8f9; --card:#ffffff; --ink:#16202a; --muted:#5b6876; --line:#c9d1d8;
+  --accent:#1c5d99; --accent-ink:#ffffff; --ok:#1e7b4a; --warn:#b07400; --err:#b42318; --info:#3b6c96; --off:#8a96a3;
+  --head:"Bahnschrift","DIN Alternate","Roboto Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:"Cascadia Mono",Consolas,"SFMono-Regular",Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --panel:#1b2229; --surface:#212a32; --card:#27313b; --ink:#e8edf1; --muted:#9aa7b3; --line:#3a4651;
+  --accent:#5a9be0; --accent-ink:#0d1620; --ok:#3fb27a; --warn:#e0a32a; --err:#f0645a; --info:#7fb0dc; --off:#6b7884; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:14px/1.45 var(--body);color:var(--ink);background:var(--panel)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+header h1{font:600 20px/1 var(--head);letter-spacing:.02em;margin:0}
+header .ro{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:2px 8px;border-radius:3px}
+header .ro{margin-left:8px} header .stat{margin-left:auto;display:flex;gap:16px;color:var(--muted);font-size:13px}
+header .stat b{color:var(--ink);font-weight:600}
+
+/* device strip: the signature element – relay front-panel LEDs */
+#strip{display:flex;gap:8px;overflow-x:auto;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--line);min-height:68px}
+#strip .empty{color:var(--muted);align-self:center}
+.tile{min-width:150px;padding:8px 12px 8px 10px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--off);border-radius:2px;cursor:pointer;position:relative}
+.tile.ok{border-left-color:var(--ok)} .tile.warning{border-left-color:var(--warn)} .tile.error{border-left-color:var(--err)} .tile.info{border-left-color:var(--info)}
+.tile .n{font:600 14px/1.2 var(--head)} .tile .ip{font:12px var(--mono);color:var(--muted)}
+.tile .v{font-size:11px;color:var(--muted);margin-top:2px}
+.led{position:absolute;top:8px;right:8px;width:11px;height:11px;border-radius:50%;background:var(--off);box-shadow:inset 0 -2px 3px rgba(0,0,0,.25)}
+.led.on{background:var(--ok);box-shadow:0 0 6px var(--ok)} .led.off{background:var(--err);box-shadow:0 0 6px var(--err)} .led.half{background:var(--warn);box-shadow:0 0 6px var(--warn)}
+
+nav{display:flex;gap:2px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+nav button{background:none;border:0;padding:10px 14px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;font-weight:500}
+nav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+main{padding:18px 20px 60px;max-width:1500px}
+section{display:none} section.active{display:block}
+h2{font:600 17px/1.2 var(--head);margin:22px 0 10px} h2:first-child{margin-top:0}
+h3{font:600 14px/1.2 var(--head);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:3px;padding:14px 16px;margin-bottom:14px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
+input[type=text],input[type=number],select{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:6px 8px;min-width:0}
+input.ip{width:150px;font-family:var(--mono)} input.port{width:80px}
+button.b{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:6px 12px;cursor:pointer}
+button.b:hover,a.b:hover{border-color:var(--accent)}
+a.b{display:inline-block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:6px 12px}
+a.b.p{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+a.b.sm{padding:2px 8px;font-size:12px}
+button.p{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.sm{padding:2px 8px;font-size:12px}
+button:disabled{opacity:.5;cursor:default}
+.muted{color:var(--muted)} .mono{font-family:var(--mono);font-size:12.5px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:6px 12px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600;background:var(--surface);position:sticky;top:0}
+td.num{text-align:right}
+.tw{overflow-x:auto;max-width:100%}
+.s{display:inline-block;min-width:58px;text-align:center;padding:1px 6px;border-radius:2px;font-size:11.5px;font-weight:600;color:#fff;background:var(--off)}
+.s.ok,.s.match{background:var(--ok)} .s.warning{background:var(--warn)} .s.error,.s.mismatch,.s.timeout{background:var(--err)} .s.info{background:var(--info)}
+td.bad{background:color-mix(in srgb,var(--err) 14%,transparent);font-weight:600}
+.group{margin-bottom:18px}
+.group>h3{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:2px solid var(--ink)}
+.cb{border-bottom:1px solid var(--line)}
+.cb summary{display:grid;grid-template-columns:76px minmax(180px,1.4fr) 1fr 64px 128px 118px 1.6fr;gap:8px;padding:6px 4px;cursor:pointer;align-items:center;list-style:none}
+.cb summary::-webkit-details-marker{display:none}
+.cb summary:hover{background:var(--surface)}
+.cb .detail{padding:6px 4px 14px 84px}
+.vl{font:600 13px var(--mono)} .vl.bad{color:var(--err)}
+.src{display:inline-flex;gap:3px} .src i{font-style:normal;font-size:10.5px;padding:0 4px;border:1px solid var(--line);border-radius:2px;color:var(--muted)}
+.src i.y{border-color:var(--accent);color:var(--accent)}
+.findings{margin:4px 0 0;padding-left:18px} .findings li{margin:2px 0}
+.hint{border-left:4px solid var(--warn);background:color-mix(in srgb,var(--warn) 10%,var(--card));padding:8px 12px;margin:8px 0}
+.err-box{border-left:4px solid var(--err);background:color-mix(in srgb,var(--err) 10%,var(--card));padding:8px 12px;margin:8px 0}
+.drop{border:2px dashed var(--line);border-radius:3px;padding:18px;text-align:center;color:var(--muted)}
+.drop.over{border-color:var(--accent);color:var(--accent)}
+.matrix td,.matrix th{text-align:center} .matrix td:first-child,.matrix th:first-child{text-align:left}
+.matrix .P{color:var(--accent);font-weight:700} .matrix .S{color:var(--ok);font-weight:700} .matrix .PS{color:var(--warn);font-weight:700}
+#toast{position:fixed;right:18px;bottom:18px;background:var(--ink);color:var(--surface);padding:10px 14px;border-radius:3px;max-width:520px;display:none;z-index:9}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:3px 14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+.events{max-height:260px;overflow:auto;font-size:12.5px}
+.pill{font-size:11px;border:1px solid var(--line);border-radius:9px;padding:0 7px;margin-left:4px;color:var(--muted)}
+@media (max-width:900px){.cb summary{grid-template-columns:70px 1fr 60px;}.cb summary .hide-s{display:none}.cb .detail{padding-left:4px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <img src="data:image/png;base64,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" alt="" width="32" height="32" style="display:block">
+  <h1>IED Inspector</h1>
+  <span class="ro" title="No MMS write services exist in this program">Read-only</span>
+  <div class="stat">
+    <span>SCD <b id="h-scd">none</b></span>
+    <span>Capture <b id="h-cap">stopped</b></span>
+    <span>Simulated <b id="h-sim">0</b></span>
+    <span id="h-counts"></span>
+  </div>
+</header>
+<div id="strip"><span class="empty">Load an SCD file or connect to an IED – devices appear here with their reachability.</span></div>
+<nav role="tablist">
+  <button role="tab" data-tab="compare" aria-selected="true">Compare</button>
+  <button role="tab" data-tab="connect">Connect (MMS)</button>
+  <button role="tab" data-tab="network">Network (GOOSE / SV)</button>
+  <button role="tab" data-tab="scd">SCD file</button>
+  <button role="tab" data-tab="sim">Simulator</button>
+  <button role="tab" data-tab="reports">Reports</button>
+  <button role="tab" data-tab="settings">Settings</button>
+</nav>
+<main>
+
+<!-- COMPARE -->
+<section id="t-compare" class="active">
+  <div class="row" style="margin-bottom:12px">
+    <div><div class="muted" style="font-size:12px;margin-bottom:3px">Organize by</div>
+      <div class="seg" id="groupby">
+        <button aria-pressed="true" data-g="device">Device</button><button data-g="vlan">VLAN</button>
+        <button data-g="ip">IP address</button><button data-g="signal">Signal</button>
+      </div></div>
+    <label class="f">Filter<input type="text" id="flt" placeholder="name, ref, VLAN…" style="width:220px"></label>
+    <label class="f">Show<select id="fstat"><option value="">all</option><option value="problems">problems only</option><option value="error">errors</option></select></label>
+    <label class="f">Kind<select id="fkind"><option value="">GOOSE + SV</option><option>GOOSE</option><option>SV</option></select></label>
+    <span class="muted" style="margin-left:auto;font-size:12px">Sources: <span class="src"><i class="y">SCD</i><i class="y">MMS</i><i class="y">NET</i></span> = seen in SCD file / read from device / captured on network</span>
+  </div>
+  <div id="compare-out"></div>
+</section>
+
+<!-- CONNECT -->
+<section id="t-connect">
+  <div class="card">
+    <h2>Read an IED over MMS</h2>
+    <div class="row">
+      <label class="f">IP address<input type="text" class="ip" id="c-ip" placeholder="192.168.1.10"></label>
+      <label class="f">Port<input type="number" class="port" id="c-port" value="102"></label>
+      <label class="f">Source interface<select id="c-src"><option value="">automatic (OS routing)</option></select></label>
+      <label class="f">MMS stack<select id="c-backend"><option value="builtin">Built-in</option><option value="libiec61850">libiec61850</option></select></label>
+      <button class="b p" id="c-go">Connect and read</button>
+      <button class="b" id="c-all" title="Reads every IED that has an IP in the SCD file">Read all IEDs from SCD</button>
+    </div>
+    <p class="muted" style="margin:8px 0 0">Reads identity, all GOOSE/SV control blocks (VLAN, priority, APPID, MAC, ConfRev …) and their dataset values. Nothing is written.</p>
+    <div id="c-msg"></div>
+  </div>
+  <h2>Connections in this session</h2>
+  <div class="card tw" id="c-list"></div>
+  <div id="c-detail"></div>
+</section>
+
+<!-- NETWORK -->
+<section id="t-network">
+  <div class="card">
+    <h2>Live capture</h2>
+    <div class="row">
+      <label class="f">Network interface<select id="n-if" style="min-width:320px"></select></label>
+      <button class="b p" id="n-start">Start capture</button>
+      <button class="b" id="n-stop">Stop</button>
+      <button class="b" id="n-pcapdl">Save capture as .pcap</button>
+      <button class="b" id="n-refresh-if" title="Reload the interface list">Reload interfaces</button>
+    </div>
+    <div id="n-ifmsg" class="muted" style="margin-top:6px"></div>
+  </div>
+  <div class="card">
+    <h2>Analyse a capture file</h2>
+    <div class="drop" id="n-drop">Drop a .pcap / .pcapng file here or <label style="color:var(--accent);cursor:pointer;text-decoration:underline">choose a file<input type="file" id="n-file" accept=".pcap,.pcapng,.cap" hidden></label></div>
+  </div>
+  <div id="n-out"></div>
+</section>
+
+<!-- SCD -->
+<section id="t-scd">
+  <div class="card">
+    <div class="drop" id="s-drop">Drop an .scd / .cid / .icd / .iid file here or <label style="color:var(--accent);cursor:pointer;text-decoration:underline">choose a file<input type="file" id="s-file" accept=".scd,.cid,.icd,.iid,.ssd,.xml" hidden></label>
+      <div style="margin-top:6px;font-size:12px">Everything already read from devices or captured is re-validated against the new file.</div></div>
+    <div class="row" style="margin-top:10px"><button class="b" id="s-demo">Load demo SCD</button><button class="b" id="s-probe">Check reachability now</button><button class="b" id="s-unload">Unload SCD</button></div>
+  </div>
+  <div id="s-out"></div>
+</section>
+
+<!-- SIMULATOR -->
+<section id="t-sim">
+  <div class="card">
+    <h2>Simulate an IED from the SCD file</h2>
+    <div class="row">
+      <label class="f">IED<select id="m-ied" style="min-width:180px"></select></label>
+      <label class="f">Listen on IP<input type="text" class="ip" id="m-ip" value="127.0.0.11"></label>
+      <label class="f">MMS port<input type="number" class="port" id="m-port" value="102"></label>
+      <label class="f">Publish GOOSE / SV on<select id="m-if" style="min-width:240px"><option value="">do not publish</option></select></label>
+      <label class="f">SV rate (frames/s)<input type="number" id="m-svrate" placeholder="from SCD" style="width:110px"></label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label><input type="checkbox" id="m-mms" checked> MMS server</label>
+      <label><input type="checkbox" id="m-goose" checked> GOOSE</label>
+      <label><input type="checkbox" id="m-sv" checked> Sampled values</label>
+      <button class="b p" id="m-start">Start simulation</button>
+      <button class="b" id="m-stopall">Stop all</button>
+    </div>
+    <p class="muted" style="margin:8px 0 0">Each simulated IED needs its own IP. 127.0.0.x works on Windows and Linux without configuration; to be reachable from other machines add the SCD IP as a secondary address on the adapter. The simulated MMS server refuses all write requests.</p>
+  </div>
+  <div id="m-out"></div>
+</section>
+
+<!-- REPORTS -->
+<section id="t-reports">
+  <div class="card">
+    <h2>Comparison report</h2>
+    <p class="muted">SCD vs device (MMS) vs network for every control block, signal, VLAN and device, with all findings.</p>
+    <div class="row">
+      <a class="b p" href="/report/comparison?format=html" download>HTML</a>
+      <a class="b" href="/report/comparison?format=csv&table=controlblocks" download>CSV – control blocks</a>
+      <a class="b" href="/report/comparison?format=csv&table=signals" download>CSV – signals</a>
+      <a class="b" href="/report/comparison?format=csv&table=findings" download>CSV – findings</a>
+      <a class="b" href="/report/comparison?format=json" download>JSON</a>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Session summary</h2>
+    <p class="muted">Every connection, capture, pcap analysis, SCD load and simulator action since the program was started.</p>
+    <div class="row">
+      <a class="b p" href="/report/summary?format=html" download>HTML</a>
+      <a class="b" href="/report/summary?format=json" download>JSON</a>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Connection reports</h2>
+    <div id="r-conns" class="tw"></div>
+  </div>
+</section>
+
+<!-- SETTINGS -->
+<section id="t-settings">
+  <div class="card">
+    <h2>MMS stack</h2>
+    <div class="row">
+      <label class="f">Default stack<select id="st-backend"><option value="builtin">Built-in (no third-party code)</option><option value="libiec61850">libiec61850 (external library)</option></select></label>
+      <label class="f">libiec61850 library file<input type="text" id="st-lib" style="width:420px" placeholder="C:\tools\iec61850.dll  or  /opt/libiec61850/libiec61850.so"></label>
+      <button class="b" id="st-test">Test library</button>
+    </div>
+    <p class="muted">libiec61850 is not shipped with this tool (GPLv3 / commercial licence by MZ Automation). Download or build it from
+      <a href="https://github.com/mz-automation/libiec61850/releases" target="_blank" rel="noopener">github.com/mz-automation/libiec61850</a>
+      (build the shared library with CMake: <span class="mono">cmake .. &amp;&amp; cmake --build . --config Release</span>) and point to <span class="mono">iec61850.dll</span> / <span class="mono">libiec61850.so</span>. Use it as a second opinion when a device behaves unexpectedly.</p>
+    <div id="st-libmsg"></div>
+  </div>
+  <div class="card">
+    <h2>Behaviour</h2>
+    <div class="row">
+      <label class="f">MMS timeout (s)<input type="number" id="st-timeout" step="0.5" style="width:90px"></label>
+      <label><input type="checkbox" id="st-probe"> Check reachability of SCD IEDs automatically</label>
+      <label class="f">every (s)<input type="number" id="st-probeint" style="width:80px"></label>
+      <button class="b p" id="st-save">Save settings</button>
+    </div>
+  </div>
+  <div class="card"><h2>Packet capture</h2><div id="st-pcap"></div></div>
+  <div class="card"><h2>About</h2><div id="st-about" class="muted"></div></div>
+</section>
+</main>
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = v => v === null || v === undefined ? "" : String(v).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const badge = s => `<span class="s ${esc((s||"").replace("n/a","na"))}">${esc(s||"–")}</span>`;
+const hex4 = v => (typeof v === "number") ? "0x" + v.toString(16).toUpperCase().padStart(4,"0") : esc(v ?? "–");
+const vlanTxt = v => v === null || v === undefined ? "untagged" : (typeof v === "number" ? `${v}` : esc(v));
+const tsTxt = t => t ? new Date(t*1000).toLocaleTimeString() : "";
+let ST = null, GROUP = "device", IFACES = [], CAPS = null, openDetails = new Set();
+
+function toast(msg, ms=4000){ const t=$("#toast"); t.textContent=msg; t.style.display="block"; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display="none", ms); }
+async function api(path, body, raw){
+  const opt = body===undefined && raw===undefined ? {} : {method:"POST", body: raw!==undefined ? raw : JSON.stringify(body)};
+  const r = await fetch(path, opt); const j = await r.json();
+  if (!r.ok || j.error) throw new Error(j.error || r.statusText);
+  return j;
+}
+
+/* ---------------- tabs */
+$$("nav button").forEach(b => b.onclick = () => {
+  $$("nav button").forEach(x => x.setAttribute("aria-selected", x===b));
+  $$("main section").forEach(s => s.classList.toggle("active", s.id === "t-"+b.dataset.tab));
+  if (b.dataset.tab === "network") loadCaptures();
+  render();
+});
+$$("#groupby button").forEach(b => b.onclick = () => { GROUP=b.dataset.g; $$("#groupby button").forEach(x=>x.setAttribute("aria-pressed", x===b)); renderCompare(); });
+["#flt","#fstat","#fkind"].forEach(s => $(s).addEventListener("input", renderCompare));
+
+/* ---------------- state polling */
+async function refresh(){
+  try { ST = await api("/api/state"); render(); } catch(e) { $("#h-counts").textContent = "server not reachable"; }
+}
+function render(){
+  if (!ST) return;
+  const a = ST.analysis;
+  $("#h-scd").textContent = ST.scd ? ST.scd.filename : "none";
+  $("#h-cap").textContent = ST.live ? `${ST.live.running ? "running" : "error"} (${ST.live.frames} frames)` : "stopped";
+  $("#h-sim").textContent = Object.keys(ST.sim).length;
+  const c = a.counts;
+  $("#h-counts").innerHTML = `${badge("error")} ${c.error||0} ${badge("warning")} ${c.warning||0}`;
+  renderStrip(a);
+  const tab = $("nav button[aria-selected=true]").dataset.tab;
+  if (tab==="compare") renderCompare();
+  if (tab==="connect") renderConnections();
+  if (tab==="scd") renderScd();
+  if (tab==="sim") renderSim();
+  if (tab==="reports") renderReports();
+  if (tab==="settings") renderSettings();
+}
+
+function renderStrip(a){
+  const devs = a.devices;
+  if (!devs.length) return;
+  $("#strip").innerHTML = devs.map(d => {
+    const led = d.reachable === true ? "on" : d.reachable === false ? (d.hostUp ? "half" : "off") : "";
+    const tip = d.reachable === true ? "reachable over MMS" : d.reachable === false ? (d.hostUp ? "host is up, but MMS does not answer" : "NOT reachable") : "reachability not checked";
+    return `<div class="tile ${esc(d.status)}" data-dev="${esc(d.name)}" title="${esc(tip)}${d.findings.length ? "\n" + esc(d.findings.slice(0,5).join("\n")) : ""}">
+      <span class="led ${led}"></span><div class="n">${esc(d.name)}</div>${d.profile?`<div class="v" style="margin-top:0">${esc(d.profile)}</div>`:""}
+      <div class="ip">${esc(d.ip || d.readFrom || "")}</div>
+      <div class="v">VLAN ${esc(d.requiredVlans.join(", ") || "–")}</div></div>`;
+  }).join("");
+  $$("#strip .tile").forEach(t => t.onclick = () => { $("#flt").value = t.dataset.dev; $$("nav button")[0].click(); });
+}
+
+/* ---------------- compare */
+function cbMatches(r, q){
+  if (!q) return true;
+  const hay = [r.ref, r.device, r.ip, r.readFrom, r.effective.vlanId, (r.scd||{}).id, (r.mms||{}).id].join(" ").toLowerCase();
+  return hay.includes(q);
+}
+function cbRow(r){
+  const ch = Object.fromEntries(r.checks.map(c => [c.field, c]));
+  const v = ch.vlanId.values;
+  const vbad = ch.vlanId.status === "mismatch";
+  const vt = ["scd","mms","wire"].filter(k => k in v).map(k => `${k==="wire"?"net":k}:${v[k]===null||v[k]===undefined?"–":esc(v[k])}`).join(" ");
+  const srcs = `<span class="src"><i class="${r.scd?"y":""}">SCD</i><i class="${r.mms?"y":""}">MMS</i><i class="${r.wire?"y":""}">NET</i></span>`;
+  const rx = r.rx ? ` <span class="pill" title="subscribers that report reception via LGOS/LSVS (MMS)" style="${r.rx.ok<r.rx.total?"color:var(--err);border-color:var(--err)":"color:var(--ok);border-color:var(--ok)"}">rx ${r.rx.ok}/${r.rx.total}</span>` : "";
+  const net = (r.wire ? `${badge(r.wire.status)}` : `<span class="muted">–</span>`) + rx;
+  const first = r.findings.length ? esc(r.findings[0][1]) + (r.findings.length>1 ? ` <span class="pill">+${r.findings.length-1}</span>` : "") : "";
+  const id = "cb:"+r.ref;
+  return `<details class="cb" data-id="${esc(id)}" ${openDetails.has(id)?"open":""}><summary>
+    <span>${badge(r.status)}</span>
+    <span><span class="mono">${esc(r.name)}</span> <span class="muted">${esc(r.kind)}</span><br><span class="muted" style="font-size:12px">${esc(r.device||"")} · ${esc(r.readFrom||r.ip||"")}</span></span>
+    <span class="hide-s"><span class="vl ${vbad?"bad":""}">VLAN ${vlanTxt(r.effective.vlanId)}</span><br><span class="muted mono" style="font-size:11px">${vt}</span></span>
+    <span class="hide-s mono">${hex4(r.effective.appId)}</span>
+    <span class="hide-s">${srcs}</span><span class="hide-s">${net}</span>
+    <span style="font-size:12.5px">${first}</span></summary>
+    <div class="detail">${cbDetail(r)}</div></details>`;
+}
+function cbDetail(r){
+  let h = `<div class="tw"><table><tr><th>Field</th><th>SCD file</th><th>Device (MMS)</th><th>Network</th><th>Result</th></tr>`;
+  for (const c of r.checks){
+    const v = c.values; const bad = c.status==="mismatch";
+    const cell = k => k in v ? `<td class="mono ${bad?"bad":""}">${v[k]===null||v[k]===undefined?"–":esc(v[k])}</td>` : `<td class="muted">not available</td>`;
+    h += `<tr><td>${esc(c.label)}</td>${cell("scd")}${cell("mms")}${cell("wire")}<td>${badge(c.status==="n/a"?"":c.status)}</td></tr>`;
+  }
+  h += `</table></div>`;
+  if (r.wire){ const w=r.wire;
+    h += `<p class="muted" style="font-size:12.5px">Network: ${esc(w.source)} · source MAC ${esc(w.src)} · ${esc(w.count)} frames · last ${esc(w.age)} s ago`+
+      (r.kind==="GOOSE" ? ` · stNum ${esc(w.stNum)} · sqNum ${esc(w.sqNum)} · TAL ${esc(w.tal)} ms${w.test?" · <b>TEST</b>":""}${w.simulation?" · <b>SIMULATION</b>":""}` : ` · ${esc(w.rate)} samples/s`)+`</p>`; }
+  if (r.supervision.length) h += `<h3>Reception confirmed by subscribers (LGOS / LSVS read over MMS)</h3><div class="tw"><table><tr><th>Receiving</th><th>Subscriber</th><th>Supervision LN</th><th>Last stNum</th><th>Expected / received ConfRev</th><th>Simulation</th><th>Read at</th></tr>${
+    r.supervision.map(x=>`<tr><td>${x.st===true?badge("ok")+" yes":x.st===false?badge("error")+" NO":"–"}</td><td>${esc(x.device)} <span class="muted mono">${esc(x.ip)}</span></td>
+    <td class="mono">${esc(x.ld)}/${esc(x.ln)}</td><td>${esc(x.lastStNum)}</td><td>${esc(x.confRevNum)} / ${esc(x.rxConfRevNum)}</td><td>${x.simSt?"accepts simulated":"–"}</td><td>${tsTxt(x.readAt)}</td></tr>`).join("")}</table></div>`;
+  if (r.subscribers.length) h += `<p style="font-size:12.5px"><b>Subscribers (SCD):</b> ${r.subscribers.map(s=>esc(s.device)+" <span class='muted mono'>"+esc(s.signal)+"</span>").join(", ")}</p>`;
+  if (r.findings.length) h += `<ul class="findings">${r.findings.map(([s,m]) => `<li>${badge(s)} ${esc(m)}</li>`).join("")}</ul>`;
+  return h;
+}
+function sigTable(sigs){
+  return `<div class="tw"><table><tr><th>Status</th><th>Signal</th><th>Control block</th><th>Device</th><th>VLAN</th><th>Value read (MMS)</th><th>Value on network</th><th>Subscribers</th></tr>${
+    sigs.map(s => `<tr><td>${badge(s.status)}</td><td class="mono">${esc(s.ref)}${s.note?`<br><span class="muted">${esc(s.note)}</span>`:""}</td>
+    <td class="mono">${esc(s.cb.split("$").pop())}</td><td>${esc(s.device)}</td><td class="mono">${vlanTxt(s.vlanId)}</td>
+    <td class="mono">${esc(s.mmsValue)}</td><td class="mono">${esc(s.wireValue)}</td><td>${esc(s.subscribers.join(", "))}</td></tr>`).join("")}</table></div>`;
+}
+function renderCompare(){
+  if (!ST) return;
+  const a = ST.analysis, q = $("#flt").value.trim().toLowerCase(), fs = $("#fstat").value, fk = $("#fkind").value;
+  const okStat = s => !fs || (fs==="problems" ? (s==="warning"||s==="error") : s===fs);
+  const out = $("#compare-out");
+  if (!a.controlBlocks.length){
+    out.innerHTML = `<div class="card"><h2>Nothing to compare yet</h2><p>Start with any of these – in any order. Everything is compared automatically:</p>
+      <p>Load the project SCD file on the <b>SCD file</b> tab · Read an IED on the <b>Connect (MMS)</b> tab · Capture GOOSE/SV or open a pcap on the <b>Network</b> tab.</p>
+      <p class="muted">No hardware at hand? Click <b>Load demo SCD</b> on the SCD file tab and start a few IEDs on the <b>Simulator</b> tab.</p></div>`;
+    return;
+  }
+  const cbs = a.controlBlocks.filter(r => cbMatches(r,q) && okStat(r.status) && (!fk || r.kind===fk));
+  let html = "";
+  if (GROUP === "signal"){
+    const sigs = a.signals.filter(s => (!q || [s.ref,s.device,s.cb,s.vlanId,s.ip].join(" ").toLowerCase().includes(q)) && okStat(s.status) && (!fk || s.kind===fk));
+    html = sigs.length ? `<div class="card">${sigTable(sigs)}</div>` : `<p class="muted">No signals match the filter.</p>`;
+  } else if (GROUP === "vlan"){
+    html = vlanMatrix(a);
+    for (const v of a.vlans){
+      const rows = cbs.filter(r => String(r.effective.vlanId ?? "untagged") === String(v.vlan));
+      if (!rows.length) continue;
+      html += `<div class="group"><h3>${badge(v.status)} VLAN ${vlanTxt(v.vlan==="untagged"?null:v.vlan)} <span class="muted" style="font:13px var(--body)">publishers: ${esc(v.devices.join(", "))} · subscribers: ${esc(v.subscribers.join(", ")||"–")} · ${v.seenOnWire?"seen on network":"not seen on network"}</span></h3>${rows.map(cbRow).join("")}</div>`;
+    }
+  } else {
+    const key = GROUP==="ip" ? (r => r.readFrom || r.ip || "unknown IP") : (r => r.device || "unknown");
+    const groups = {};
+    cbs.forEach(r => (groups[key(r)] ||= []).push(r));
+    const devMap = Object.fromEntries(a.devices.map(d => [d.name, d]));
+    for (const g of Object.keys(groups).sort()){
+      const d = GROUP==="device" ? devMap[g] : null;
+      const st = d ? d.status : groups[g].reduce((s,r)=>({"ok":0,"info":1,"warning":2,"error":3}[r.status] > {"ok":0,"info":1,"warning":2,"error":3}[s] ? r.status : s), d ? d.status : "ok");
+      const extra = d ? `${esc(d.ip||"")} · reachable: ${d.reachable===true?"yes":d.reachable===false?"<b>no</b>":"not checked"} · required VLANs: <b>${esc(d.requiredVlans.join(", ")||"–")}</b>` : "";
+      html += `<div class="group"><h3>${badge(st)} ${esc(g)} <span class="muted" style="font:13px var(--body)">${extra}</span></h3>
+        ${d && d.findings.length ? `<ul class="findings">${d.findings.slice(0,6).map(f=>`<li>${esc(f)}</li>`).join("")}</ul>` : ""}
+        ${groups[g].map(cbRow).join("")}</div>`;
+    }
+    if (!html) html = `<p class="muted">No control blocks match the filter.</p>`;
+  }
+  out.innerHTML = html;
+  $$("#compare-out details.cb").forEach(d => d.addEventListener("toggle", () => d.open ? openDetails.add(d.dataset.id) : openDetails.delete(d.dataset.id)));
+}
+function vlanMatrix(a){
+  const vl = a.vlans.map(v=>v.vlan);
+  const devs = a.devices.filter(d => d.publishes.length || d.subscribes.length);
+  if (!devs.length) return "";
+  const cell = (d,v) => { const p=d.publishes.map(String).includes(String(v)), s=d.subscribes.map(String).includes(String(v));
+    return p&&s ? `<td class="PS" title="publishes and subscribes">P+S</td>` : p ? `<td class="P" title="publishes">P</td>` : s ? `<td class="S" title="subscribes">S</td>` : `<td class="muted">·</td>`; };
+  return `<div class="card"><h3>VLAN membership needed per device</h3><p class="muted" style="margin-top:0">P = publishes, S = subscribes (from SCD subscriptions). Use it to check the switch-port VLAN configuration.</p><div class="tw"><table class="matrix"><tr><th>Device</th>${vl.map(v=>`<th>${vlanTxt(v==="untagged"?null:v)}</th>`).join("")}<th>Status</th></tr>
+    ${devs.map(d=>`<tr><td>${esc(d.name)}</td>${vl.map(v=>cell(d,v)).join("")}<td>${badge(d.status)}</td></tr>`).join("")}</table></div></div>`;
+}
+
+/* ---------------- connect */
+$("#c-go").onclick = async () => {
+  const ip = $("#c-ip").value.trim(); if (!ip) return toast("Enter an IP address");
+  const btn = $("#c-go"); btn.disabled = true; btn.textContent = "Reading…"; $("#c-msg").innerHTML = "";
+  try {
+    const r = await api("/api/connect", {ip, port:+$("#c-port").value||102, backend:$("#c-backend").value, localIp:$("#c-src").value});
+    $("#c-msg").innerHTML = r.ok ? `<p>${badge("ok")} Connected to ${esc(ip)} – ${r.gocbs.length} GOOSE and ${r.svcbs.length} SV control blocks read.</p>`
+      : `<div class="err-box">Could not read ${esc(ip)}: ${esc(r.error)}</div>`;
+    await refresh(); showConnection(r.id);
+  } catch(e){ $("#c-msg").innerHTML = `<div class="err-box">${esc(e.message)}</div>`; }
+  btn.disabled = false; btn.textContent = "Connect and read";
+};
+$("#c-ip").addEventListener("keydown", e => { if (e.key==="Enter") $("#c-go").click(); });
+$("#c-all").onclick = async () => {
+  const btn = $("#c-all"); btn.disabled = true; btn.textContent = "Reading all…";
+  try { const r = await api("/api/connect-all", {}); toast(`${r.results.filter(x=>x.ok).length} of ${r.results.length} IEDs read`); await refresh(); }
+  catch(e){ toast(e.message); }
+  btn.disabled = false; btn.textContent = "Read all IEDs from SCD";
+};
+function renderConnections(){
+  const cs = ST.connections.slice().reverse();
+  $("#c-list").innerHTML = cs.length ? `<table><tr><th>#</th><th>Time</th><th>Target</th><th>Result</th><th>Identity</th><th>GOOSE</th><th>SV</th><th>Stack</th><th></th></tr>${
+    cs.map(c=>`<tr><td>${c.id}</td><td>${tsTxt(c.started)}</td><td class="mono">${esc(c.ip)}:${esc(c.port)}</td>
+      <td>${c.ok?badge("ok"):badge("error")+" "+esc(c.error)}</td><td>${esc((c.identity||{}).vendor)} ${esc((c.identity||{}).model)} ${esc((c.identity||{}).revision)}</td>
+      <td class="num">${c.gocbs}</td><td class="num">${c.svcbs}</td><td>${esc(c.backend)}</td>
+      <td><button class="b sm" data-show="${c.id}">Details</button> <a class="b sm" href="/report/connection?id=${c.id}&format=html" download>Report</a> <a class="b sm" href="/report/datamodel?id=${c.id}" download>Data model</a></td></tr>`).join("")}</table>`
+    : `<p class="muted">No connections yet. Enter an IP address above.</p>`;
+  $$("[data-show]").forEach(b => b.onclick = () => showConnection(+b.dataset.show));
+}
+async function showConnection(id){
+  const c = await api("/api/connection?id="+id);
+  let h = `<div class="card"><h2>${esc(c.ip)} – connection #${c.id}</h2>`;
+  if (!c.ok) h += `<div class="err-box">${esc(c.error)}</div>`;
+  const i = c.identity||{};
+  h += `<dl class="kv"><dt>Vendor</dt><dd>${esc(i.vendor)}</dd><dt>Model</dt><dd>${esc(i.model)}</dd><dt>Revision</dt><dd>${esc(i.revision)}</dd>
+    <dt>Logical devices</dt><dd class="mono">${esc((c.domains||[]).join(", "))}</dd><dt>Duration</dt><dd>${esc(c.duration_ms)} ms</dd></dl>`;
+  for (const [title,list] of [["GOOSE control blocks",c.gocbs],["Sampled value control blocks",c.svcbs]]){
+    if (!list.length) continue;
+    h += `<h3>${title}</h3><div class="tw"><table><tr><th>Control block</th><th>Enabled</th><th>VLAN ID</th><th>Prio</th><th>APPID</th><th>Destination MAC</th><th>ConfRev</th><th>ID</th><th>DataSet</th></tr>${
+      list.map(g=>`<tr><td class="mono">${esc(g.ref)}${g.error?"<br>"+badge("error")+" "+esc(g.error):""}</td><td>${esc(g.enabled)}</td>
+      <td class="vl">${esc(g.vlanId)}${typeof g.vlanId==="number"?` <span class="muted">(0x${g.vlanId.toString(16).toUpperCase().padStart(3,"0")})</span>`:""}</td>
+      <td>${esc(g.vlanPriority)}</td><td class="mono">${hex4(g.appId)}</td><td class="mono">${esc(g.mac)}</td><td>${esc(g.confRev)}</td><td class="mono">${esc(g.id)}</td><td class="mono">${esc(g.datSet)}</td></tr>`).join("")}</table></div>`;
+    for (const g of list) if (g.members && g.members.length)
+      h += `<h3>${esc(g.name)} – dataset values</h3><div class="tw"><table><tr><th>#</th><th>Reference</th><th>Value</th></tr>${g.members.map(m=>`<tr><td>${m.index}</td><td class="mono">${esc(m.ref)}</td><td class="mono">${esc(m.text)}</td></tr>`).join("")}</table></div>`;
+  }
+  if (c.supervision && c.supervision.length)
+    h += `<h3>Subscription supervision (LGOS / LSVS) – what this IED receives</h3><div class="tw"><table><tr><th>Receiving</th><th>LN</th><th>Supervised control block</th><th>Last stNum</th><th>ConfRev expected / received</th><th>SimSt</th></tr>${
+      c.supervision.map(x=>`<tr><td>${x.st===true?badge("ok")+" yes":x.st===false?badge("error")+" NO":"–"}</td><td class="mono">${esc(x.ld)}/${esc(x.ln)}</td><td class="mono">${esc(x.ref)}</td>
+      <td>${esc(x.lastStNum)}</td><td>${esc(x.confRevNum)} / ${esc(x.rxConfRevNum)}</td><td>${esc(x.simSt)}</td></tr>`).join("")}</table></div>`;
+  if (c.vendorSupervision && c.vendorSupervision.length)
+    h += `<h3>Vendor GOOSE receive supervision</h3>${c.vendorSupervision.map(v=>`<div style="margin:6px 0 10px">
+      ${v.ok===true?badge("ok"):v.ok===false?badge("error"):badge("info")} <b class="mono">${esc(v.ld)}/${esc(v.ln)}</b> <span class="muted">${esc(v.profile)} · ${v.scope==="device"?"covers all subscriptions of this IED":v.scope==="block"?"one receive function block":"meaning unknown"}</span><br>${esc(v.summary)}
+      <div class="tw"><table style="margin-top:4px">${Object.entries(v.values).map(([k,x])=>`<tr><td class="mono">${esc(k)}</td><td class="mono">${esc(x)}</td></tr>`).join("")}</table></div></div>`).join("")}`;
+  if (c.ok && !(c.supervision||[]).length && !(c.vendorSupervision||[]).length)
+    h += `<p class="muted">No LGOS/LSVS or known vendor supervision nodes found, so GOOSE/SV reception of this IED cannot be confirmed over MMS. Export the data model and check the device manual for its receive diagnostics.</p>`;
+  h += `<h3>Log</h3><pre class="mono" style="white-space:pre-wrap">${esc((c.log||[]).join("\n"))}</pre></div>`;
+  $("#c-detail").innerHTML = h;
+}
+
+/* ---------------- interfaces */
+async function loadIfaces(){
+  try {
+    const r = await api("/api/interfaces"); IFACES = r.interfaces;
+    const opts = IFACES.map(i => `<option value="${esc(i.id)}" data-label="${esc(i.name)}">${esc(i.name)}${i.ips.length?" – "+esc(i.ips.join(", ")):""}${i.description && i.description!==i.name && !r.isWindows?" ("+esc(i.description)+")":""}</option>`).join("");
+    $("#n-if").innerHTML = opts || `<option value="">no interfaces found</option>`;
+    $("#m-if").innerHTML = `<option value="">do not publish</option>` + opts;
+    $("#c-src").innerHTML = `<option value="">automatic (OS routing)</option>` + IFACES.filter(i=>i.ips.length).flatMap(i => i.ips.map(ip => `<option value="${esc(ip)}">${esc(ip)} – ${esc(i.name)}</option>`)).join("");
+    let msg = r.isLinux ? "Linux raw sockets are used (run as root or give python CAP_NET_RAW)." : "";
+    if (!r.isLinux) msg = r.pcap.available ? `Npcap ${esc(r.pcap.version)}` : `<span style="color:var(--err)">Npcap is not installed – live capture, GOOSE and SV publishing are unavailable. Install it from <a href="https://npcap.com" target="_blank" rel="noopener">npcap.com</a>. MMS, pcap files and SCD work without it.</span>`;
+    $("#n-ifmsg").innerHTML = msg; $("#st-pcap").innerHTML = msg;
+  } catch(e){ $("#n-ifmsg").textContent = e.message; }
+}
+$("#n-refresh-if").onclick = loadIfaces;
+
+/* ---------------- network */
+$("#n-start").onclick = async () => {
+  const sel = $("#n-if"); const o = sel.selectedOptions[0];
+  try { await api("/api/capture/start", {iface: sel.value, label: o ? o.dataset.label : sel.value}); toast("Capture started"); refresh(); loadCaptures(); }
+  catch(e){ toast(e.message, 8000); }
+};
+$("#n-stop").onclick = async () => { await api("/api/capture/stop", {}); refresh(); loadCaptures(); };
+$("#n-pcapdl").onclick = () => { location.href = "/report/pcap"; };
+function setupDrop(zone, input, handler){
+  zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("over"); });
+  zone.addEventListener("dragleave", () => zone.classList.remove("over"));
+  zone.addEventListener("drop", e => { e.preventDefault(); zone.classList.remove("over"); if (e.dataTransfer.files[0]) handler(e.dataTransfer.files[0]); });
+  input.addEventListener("change", () => { if (input.files[0]) handler(input.files[0]); input.value=""; });
+}
+setupDrop($("#n-drop"), $("#n-file"), async f => {
+  toast("Analysing " + f.name + " …");
+  try { await api("/api/pcap?name="+encodeURIComponent(f.name), undefined, await f.arrayBuffer()); toast(f.name + " analysed"); refresh(); loadCaptures(); }
+  catch(e){ toast(e.message, 8000); }
+});
+async function loadCaptures(){
+  try { CAPS = (await api("/api/captures")).captures; renderCaptures(); } catch(e){}
+}
+function renderCaptures(){
+  if (!CAPS) return;
+  if (!CAPS.length){ $("#n-out").innerHTML = `<p class="muted">No capture yet. Start a live capture or open a pcap file.</p>`; return; }
+  $("#n-out").innerHTML = CAPS.map(c => `<div class="card"><div class="row" style="align-items:center"><h2 style="margin:0">${esc(c.source)}</h2>
+    <span class="muted">${c.frames} GOOSE/SV frames${c.first?` · ${tsTxt(c.first)} – ${tsTxt(c.last)}`:""}</span>
+    ${c.id!=="live"?`<button class="b sm" data-clear="${esc(c.id)}" style="margin-left:auto">Remove</button>`:""}</div>
+    ${c.vlanHint?`<div class="hint">${esc(c.vlanHint)}</div>`:""}
+    <h3>GOOSE streams (${c.goose.length})</h3>${c.goose.length?`<div class="tw"><table><tr><th>Status</th><th>gocbRef</th><th>Source MAC</th><th>VLAN</th><th>Prio</th><th>APPID</th><th>Dest MAC</th><th>stNum</th><th>sqNum</th><th>TAL ms</th><th>Age s</th><th>ConfRev</th><th>Flags / warnings</th><th>Values</th></tr>${
+      c.goose.map(g=>`<tr><td>${badge(g.status)}</td><td class="mono">${esc(g.gocbRef)}<br><span class="muted">${esc(g.goID)}</span></td><td class="mono">${esc(g.src)}</td>
+      <td class="vl">${vlanTxt(g.vlanId)}</td><td>${esc(g.vlanPriority)}</td><td class="mono">${hex4(g.appId)}</td><td class="mono">${esc(g.dst)}</td><td class="num">${esc(g.stNum)}</td><td class="num">${esc(g.sqNum)}</td>
+      <td class="num">${esc(g.tal)}</td><td class="num">${esc(g.age)}</td><td class="num">${esc(g.confRev)}</td><td>${g.warnings.map(w=>`<span class="s warning">${esc(w)}</span>`).join(" ")}</td>
+      <td class="mono" style="font-size:11.5px">${esc((g.valueText||[]).join(" | "))}</td></tr>`).join("")}</table></div>`:`<p class="muted">none</p>`}
+    <h3>Sampled value streams (${c.sv.length})</h3>${c.sv.length?`<div class="tw"><table><tr><th>Status</th><th>svID</th><th>Source MAC</th><th>VLAN</th><th>APPID</th><th>Dest MAC</th><th>Frames/s</th><th>smpCnt</th><th>smpSynch</th><th>ConfRev</th><th>Warnings</th><th>First values</th></tr>${
+      c.sv.map(s=>`<tr><td>${badge(s.status)}</td><td class="mono">${esc(s.svID)}</td><td class="mono">${esc(s.src)}</td><td class="vl">${vlanTxt(s.vlanId)}</td><td class="mono">${hex4(s.appId)}</td>
+      <td class="mono">${esc(s.dst)}</td><td class="num">${esc(s.rate)}</td><td class="num">${esc(s.smpCnt)}</td><td>${esc(s.smpSynch)}</td><td>${esc(s.confRev)}</td>
+      <td>${s.warnings.map(w=>`<span class="s warning">${esc(w)}</span>`).join(" ")}</td><td class="mono" style="font-size:11.5px">${esc((s.values||[]).slice(0,8).join(" | "))}</td></tr>`).join("")}</table></div>`:`<p class="muted">none</p>`}
+    <details><summary class="muted" style="cursor:pointer">Events (${c.events.length})</summary><div class="events"><table>${
+      c.events.slice().reverse().map(e=>`<tr><td>${tsTxt(e.ts)}</td><td>${badge(e.severity)}</td><td>${esc(e.message)}</td></tr>`).join("")}</table></div></details></div>`).join("");
+  $$("[data-clear]").forEach(b => b.onclick = async () => { await api("/api/capture/clear", {id:b.dataset.clear}); loadCaptures(); refresh(); });
+}
+
+/* ---------------- SCD */
+setupDrop($("#s-drop"), $("#s-file"), async f => {
+  try { const r = await api("/api/scd?name="+encodeURIComponent(f.name), undefined, await f.arrayBuffer());
+        toast(`${f.name}: ${r.summary.ieds.length} IEDs, ${r.validation.length} validation findings`); refresh(); }
+  catch(e){ toast("Cannot read the SCD file: " + e.message, 8000); }
+});
+$("#s-probe").onclick = async () => { toast("Checking reachability…"); await api("/api/probe", {}); refresh(); };
+$("#s-demo").onclick = async () => { try { const r = await api("/api/scd/demo", {}); toast(`Demo SCD loaded: ${r.summary.ieds.length} IEDs`); refresh(); } catch(e){ toast(e.message); } };
+$("#s-unload").onclick = async () => { await api("/api/scd/unload", {}); refresh(); };
+function renderScd(){
+  const s = ST.scd, out = $("#s-out");
+  if (!s){ out.innerHTML = `<p class="muted">No SCD file loaded.</p>`; return; }
+  const a = ST.analysis;
+  const scdF = a.findings.filter(f => f.category !== "Comparison");
+  let h = `<div class="card"><h2>${esc(s.filename)}</h2><dl class="kv"><dt>Header</dt><dd>${esc(s.header.id||"")} ${esc(s.header.version||"")} ${esc(s.header.revision||"")}</dd>
+    <dt>SCL edition</dt><dd>${esc(s.version||"2003 (Ed.1)")}</dd><dt>Subnetworks</dt><dd>${s.subnets.map(n=>esc(n.name)+" ("+esc(n.type)+", "+n.aps+" APs)").join(", ")}</dd></dl></div>`;
+  h += `<div class="card"><h2>IEDs</h2><div class="tw"><table><tr><th>Reachable</th><th>IED</th><th>Description</th><th>Manufacturer / type</th><th>IP</th><th>Subnetwork</th><th>Logical devices</th><th>GOOSE</th><th>SV</th><th>Subscriptions</th></tr>${
+    s.ieds.map(i => { const p = ST.probes[i.ip]; const led = p ? (p.reachable ? "on" : p.hostUp ? "half" : "off") : "";
+      return `<tr><td><span class="led ${led}" style="position:static;display:inline-block"></span> ${p?(p.reachable?"yes":p.hostUp?"host up, no MMS":"no"):"–"}</td><td><b>${esc(i.name)}</b>${i.profile?`<br><span class="pill" style="margin:0">${esc(i.profile)}</span>`:""}</td><td>${esc(i.desc)}</td><td>${esc(i.manufacturer)} ${esc(i.type)}</td>
+      <td class="mono">${esc(i.ip)}</td><td>${esc(i.subnet)}</td><td class="mono">${esc(i.lds.join(", "))}</td><td class="num">${i.gocbs}</td><td class="num">${i.svcbs}</td><td class="num">${i.subscriptions}</td></tr>`; }).join("")}</table></div></div>`;
+  h += `<div class="card"><h2>SCD validation (${scdF.length})</h2>${scdF.length?`<div class="tw"><table><tr><th>Severity</th><th>Category</th><th>IED</th><th>Object</th><th>Message</th></tr>${
+    scdF.map(f=>`<tr><td>${badge(f.severity)}</td><td>${esc(f.category)}</td><td>${esc(f.device)}</td><td class="mono">${esc(f.object)}</td><td>${esc(f.message)}</td></tr>`).join("")}</table></div>`:`<p>${badge("ok")} No problems found.</p>`}</div>`;
+  h += vlanMatrix(a);
+  out.innerHTML = h;
+}
+
+/* ---------------- simulator */
+$("#m-start").onclick = async () => {
+  try {
+    const r = await api("/api/sim/start", {ied:$("#m-ied").value, ip:$("#m-ip").value.trim(), port:+$("#m-port").value||102, iface:$("#m-if").value,
+      mms:$("#m-mms").checked, goose:$("#m-goose").checked, sv:$("#m-sv").checked, svRate:$("#m-svrate").value||null});
+    toast("Simulating " + r.key);
+    const parts = $("#m-ip").value.split("."); if (parts.length===4 && parts[0]==="127") { parts[3] = String((+parts[3]||10)+1); $("#m-ip").value = parts.join("."); }
+    refresh();
+  } catch(e){ toast(e.message, 9000); }
+};
+$("#m-stopall").onclick = async () => { await api("/api/sim/stop", {key:"all"}); refresh(); };
+let SIMSIG = {};
+async function loadSimSignals(key){ SIMSIG[key] = (await api("/api/sim/signals?key="+encodeURIComponent(key))).signals; renderSim(true); }
+function renderSim(force){
+  const sel = $("#m-ied");
+  const names = ST.scd ? ST.scd.ieds.map(i=>i.name) : [];
+  if (sel.dataset.v !== names.join()){ sel.innerHTML = names.map(n=>`<option>${esc(n)}</option>`).join("") || `<option value="">load an SCD first</option>`; sel.dataset.v = names.join(); }
+  const out = $("#m-out");
+  if (out.contains(document.activeElement) && !force) return;   // don't disturb typing
+  const devs = Object.entries(ST.sim);
+  if (!devs.length){ out.innerHTML = `<p class="muted">No simulated IEDs running.</p>`; return; }
+  out.innerHTML = devs.map(([k,d]) => `<div class="card" data-key="${esc(k)}"><div class="row" style="align-items:center">
+      <h2 style="margin:0">${esc(d.name)}</h2><span class="mono">${esc(d.ip)}:${esc(d.port)}</span>
+      <span class="muted">${d.mms?`MMS clients: ${d.clients.length} · requests: ${d.requests}`:"MMS off"} · iface ${esc(d.iface||"none")} · src MAC ${esc(d.srcMac)}</span>
+      <label><input type="checkbox" data-flag="test" ${d.test?"checked":""}> TEST flag</label>
+      <label><input type="checkbox" data-flag="simulation" ${d.simulation?"checked":""}> Simulation bit</label>
+      <button class="b sm" data-stop style="margin-left:auto">Stop</button></div>
+      ${d.error?`<div class="err-box">${esc(d.error)}</div>`:""}
+      ${d.goose.length?`<h3>GOOSE</h3><div class="tw"><table><tr><th>Control block</th><th>Publishing</th><th>VLAN</th><th>Override VLAN (test)</th><th>APPID</th><th>stNum</th><th>sqNum</th><th>Frames</th></tr>${
+        d.goose.map(g=>`<tr><td class="mono">${esc(g.ref)}</td><td><label><input type="checkbox" data-cb="${esc(g.ref)}" data-act="enabled" ${g.enabled?"checked":""}> on</label></td>
+          <td class="vl ${g.vlanOverridden?"bad":""}">${vlanTxt(g.vlan)}</td><td><input type="number" style="width:80px" data-cb="${esc(g.ref)}" data-act="vlan" placeholder="SCD" value="${g.vlanOverridden?esc(g.vlan):""}"></td>
+          <td class="mono">${hex4(g.appId)}</td><td class="num">${g.stNum}</td><td class="num">${g.sqNum}</td><td class="num">${g.sent}</td></tr>`).join("")}</table></div>`:""}
+      ${d.sv.length?`<h3>Sampled values</h3><div class="tw"><table><tr><th>Control block</th><th>Publishing</th><th>VLAN</th><th>Channels</th><th>Target rate /s</th><th>Frames</th></tr>${
+        d.sv.map(g=>`<tr><td class="mono">${esc(g.ref)}</td><td><label><input type="checkbox" data-cb="${esc(g.ref)}" data-act="enabled" ${g.enabled?"checked":""}> on</label></td>
+          <td class="vl">${vlanTxt(g.vlan)}</td><td>${g.channels}</td><td>${g.rate}</td><td class="num">${g.sent}</td></tr>`).join("")}</table></div>`:""}
+      ${d.subscriber && d.subscriber.entries.length ? `<h3>Subscriptions (emulated LGOS/LSVS)</h3>
+        <div class="row" style="margin-bottom:6px"><label class="f">VLANs allowed on this IED's switch port (emulated)<input type="text" data-portvlans style="width:200px" placeholder="all" value="${esc((d.subscriber.acceptVlans||[]).join(", "))}"></label>
+        <span class="muted">${d.subscriber.dropped} frames dropped by the emulated port</span></div>
+        <div class="tw"><table><tr><th>Receiving</th><th>LN</th><th>Supervised control block</th><th>Frames received</th></tr>${
+        d.subscriber.entries.map(x=>`<tr><td>${x.active?badge("ok")+" yes":badge("error")+" no"}</td><td class="mono">${esc(x.ln)}</td><td class="mono">${esc(x.ref)}</td><td class="num">${x.received ?? "–"}</td></tr>`).join("")}</table></div>` : ""}
+      <h3>Signals in published datasets <button class="b sm" data-loadsig>${SIMSIG[k]?"Reload":"Show"}</button></h3>
+      ${SIMSIG[k]?`<div class="tw"><table><tr><th>Signal</th><th>Type</th><th>Current value</th><th>New value</th><th></th></tr>${
+        SIMSIG[k].map(s=>`<tr><td class="mono">${esc(s.ref)}</td><td>${esc(s.type)}</td><td class="mono">${esc(s.value)}</td>
+        <td>${s.mtype==="bool"?`<select data-val="${esc(s.ref)}"><option>true</option><option>false</option></select>`
+            : s.type==="Dbpos"?`<select data-val="${esc(s.ref)}"><option>on</option><option>off</option><option>intermediate-state</option><option>bad-state</option></select>`
+            :`<input type="text" style="width:140px" data-val="${esc(s.ref)}">`}</td>
+        <td><button class="b sm" data-set="${esc(s.ref)}">Set</button></td></tr>`).join("")}</table></div>`:""}
+    </div>`).join("");
+  $$("#m-out .card").forEach(card => {
+    const key = card.dataset.key;
+    card.querySelector("[data-stop]").onclick = async () => { await api("/api/sim/stop", {key}); delete SIMSIG[key]; refresh(); };
+    card.querySelectorAll("[data-flag]").forEach(cb => cb.onchange = async () => { await api("/api/sim/flags", {key, [cb.dataset.flag]: cb.checked}); refresh(); });
+    card.querySelectorAll("[data-act=enabled]").forEach(cb => cb.onchange = async () => { await api("/api/sim/cb", {key, ref: cb.dataset.cb, enabled: cb.checked}); refresh(); });
+    card.querySelectorAll("[data-act=vlan]").forEach(inp => inp.onchange = async () => { await api("/api/sim/cb", {key, ref: inp.dataset.cb, vlan: inp.value}); inp.blur(); refresh(); });
+    const pv = card.querySelector("[data-portvlans]");
+    if (pv) pv.onchange = async () => { try { await api("/api/sim/port-vlans", {key, vlans: pv.value}); pv.blur(); toast("Emulated port VLANs: " + (pv.value || "all")); refresh(); } catch(e){ toast(e.message); } };
+    card.querySelector("[data-loadsig]").onclick = () => loadSimSignals(key);
+    card.querySelectorAll("[data-set]").forEach(b => b.onclick = async () => {
+      const inp = card.querySelector(`[data-val="${CSS.escape(b.dataset.set)}"]`);
+      try { const r = await api("/api/sim/value", {key, ref:b.dataset.set, value: inp.value}); toast(`Value set – ${r.goosesTriggered} GOOSE message(s) triggered`); loadSimSignals(key); }
+      catch(e){ toast(e.message); }
+    });
+  });
+}
+
+/* ---------------- reports / settings */
+function renderReports(){
+  const cs = ST.connections.slice().reverse();
+  $("#r-conns").innerHTML = cs.length ? `<table><tr><th>#</th><th>Time</th><th>Target</th><th>Result</th><th>Export</th></tr>${cs.map(c=>`<tr><td>${c.id}</td><td>${tsTxt(c.started)}</td><td class="mono">${esc(c.ip)}</td><td>${c.ok?badge("ok"):badge("error")}</td>
+    <td><a class="b sm" href="/report/connection?id=${c.id}&format=html" download>HTML</a> <a class="b sm" href="/report/connection?id=${c.id}&format=txt" download>Text</a> <a class="b sm" href="/report/connection?id=${c.id}&format=json" download>JSON</a> <a class="b sm" href="/report/datamodel?id=${c.id}" download>Data model</a></td></tr>`).join("")}</table>` : `<p class="muted">No connections yet.</p>`;
+}
+let settingsShown = false;
+function renderSettings(){
+  if (settingsShown && $("#t-settings").contains(document.activeElement)) return;
+  const s = ST.settings; settingsShown = true;
+  $("#st-backend").value = s.backend; $("#st-lib").value = s.libPath||""; $("#st-timeout").value = s.timeout;
+  $("#st-probe").checked = !!s.autoProbe; $("#st-probeint").value = s.probeInterval;
+  $("#st-about").innerHTML = `IED Inspector ${esc(ST.version)} on ${esc(ST.platform)}. Read-only: the built-in MMS client contains no write services, and the simulator refuses writes. Session started ${new Date(ST.session.started*1000).toLocaleString()}.`;
+}
+$("#st-save").onclick = async () => {
+  await api("/api/settings", {backend:$("#st-backend").value, libPath:$("#st-lib").value.trim(), timeout:+$("#st-timeout").value||5,
+    autoProbe:$("#st-probe").checked, probeInterval:+$("#st-probeint").value||30});
+  $("#c-backend").value = $("#st-backend").value; toast("Settings saved"); refresh();
+};
+$("#st-test").onclick = async () => {
+  try { const r = await api("/api/settings/test-lib", {libPath:$("#st-lib").value.trim()}); $("#st-libmsg").innerHTML = `<p>${badge("ok")} libiec61850 ${esc(r.version)} loaded.</p>`; }
+  catch(e){ $("#st-libmsg").innerHTML = `<div class="err-box">${esc(e.message)}</div>`; }
+};
+
+/* ---------------- start */
+(async () => {
+  await loadIfaces(); await refresh();
+  if (ST) $("#c-backend").value = ST.settings.backend;
+  setInterval(refresh, 2000);
+  setInterval(() => { if ($("nav button[aria-selected=true]").dataset.tab === "network") loadCaptures(); }, 1500);
+})();
+</script>
+</body>
+</html>
