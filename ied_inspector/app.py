@@ -112,6 +112,7 @@ class Api:
     @staticmethod
     def state(q, body):
         a = S.analysis()
+        a.pop("generated", None)          # keep the state identical while nothing changes (ETag / 304)
         live = None
         if S.live:
             cap, tr = S.live
@@ -400,6 +401,23 @@ class Handler(BaseHTTPRequestHandler):
             if u.path in ("/", "/index.html"):
                 with open(os.path.join(WEB_DIR, "index.html"), "rb") as f:
                     return self._send(200, f.read(), "text/html; charset=utf-8")
+            if u.path == "/api/state":
+                import hashlib
+                body = reports.to_json(Api.state(q, {})).encode()
+                tag = '"' + hashlib.md5(body).hexdigest() + '"'
+                if self.headers.get("If-None-Match") == tag:
+                    self.send_response(304)
+                    self.send_header("ETag", tag)
+                    self.end_headers()
+                    return
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "no-cache")
+                self.send_header("ETag", tag)
+                self.end_headers()
+                self.wfile.write(body)
+                return
             if u.path in GET_ROUTES:
                 return self._json(GET_ROUTES[u.path](q, {}))
             if u.path.startswith("/report/"):

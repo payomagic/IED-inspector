@@ -11,7 +11,13 @@ def _strip_ns(root):
             el.tag = el.tag.split("}", 1)[1]
         for k in list(el.attrib):
             if "}" in k:
-                el.attrib[k.split("}", 1)[1]] = el.attrib.pop(k)
+                v = el.attrib.pop(k)
+                local = k.split("}", 1)[1]
+                # Never let a namespaced attribute (e.g. xsi:type="tP_VLAN-ID", written by
+                # PCM600 and other tools) overwrite the plain SCL attribute of the same name.
+                if "XMLSchema-instance" in k or local in el.attrib:
+                    continue
+                el.attrib[local] = v
     return root
 
 
@@ -363,9 +369,15 @@ class SclModel:
                 add("warning", "Addressing", ied["name"], ied["name"], "IED has no IP address in the Communication section")
         for ip, lst in ips.items():
             if len(lst) > 1:
-                add("error", "Addressing", ", ".join(lst), ip, f"IP {ip} is used by several IEDs: {', '.join(lst)}")
+                servers = [n for n in lst if self.ieds[n]["lds"]]
+                if len(servers) <= 1:
+                    add("info", "Addressing", ", ".join(lst), ip,
+                        f"IP {ip} is shared by {', '.join(lst)} – client / OPC server definitions of the same computer")
+                else:
+                    add("error", "Addressing", ", ".join(lst), ip, f"IP {ip} is used by several IEDs: {', '.join(lst)}")
 
         appids, macs, goids = defaultdict(list), defaultdict(list), defaultdict(list)
+        mac_outside = defaultdict(list)
         for ied in self.ieds.values():
             for kind, cbs in (("GOOSE", ied["gocbs"]), ("SV", ied["svcbs"])):
                 for cb in cbs:
@@ -407,8 +419,10 @@ class SclModel:
                         if not first_octet & 1:
                             add("error", kind, ied["name"], o, f"MAC {mac} is not a multicast address")
                         pref = "01-0C-CD-01-" if kind == "GOOSE" else "01-0C-CD-04-"
-                        if not mac.startswith(pref) or mac[12:14] not in ("00", "01"):
-                            add("warning", kind, ied["name"], o, f"MAC {mac} is outside the IEC 61850 recommended range {pref}00-00 … {pref}01-FF")
+                        if not mac.startswith(pref):
+                            add("warning", kind, ied["name"], o, f"MAC {mac} does not start with {pref} (IEC 61850 {kind} multicast block)")
+                        elif mac[12:14] not in ("00", "01"):
+                            mac_outside[kind].append(mac)
                         macs[mac].append((o, v))
                     if not cb.get("datSet"):
                         add("error", "DataSet", ied["name"], o, "control block has no DataSet")
@@ -426,6 +440,12 @@ class SclModel:
                 for f, ref in zip(ds["fcdas"], ds["members"]):
                     if not self._fcda_exists(ied, f):
                         add("error", "DataSet", ied["name"], ds["ref"], f"FCDA {ref} does not exist in the data model")
+        for kind, lst in mac_outside.items():
+            pref = "01-0C-CD-01-" if kind == "GOOSE" else "01-0C-CD-04-"
+            add("info", kind, "", f"{len(lst)} control blocks",
+                f"{len(lst)} {kind} control blocks use MACs {min(lst)} … {max(lst)}, outside the narrow range {pref}00-00 … "
+                f"{pref}01-FF suggested in IEC 61850-8-1. Valid multicast addresses (typical PCM600 allocation); "
+                f"only check that switch multicast filters allow them.")
         for (kind, a), lst in appids.items():
             if len(lst) > 1:
                 add("warning", kind, "", ", ".join(lst), f"APPID 0x{a:04X} is used by {len(lst)} control blocks")
@@ -436,7 +456,12 @@ class SclModel:
                     f"Destination MAC {mac} is shared by {len(lst)} control blocks" + (" in the same VLAN" if same_vlan else ""))
         for (kind, gid), lst in goids.items():
             if len(lst) > 1:
-                add("warning", kind, "", ", ".join(lst), f"{'GoID' if kind == 'GOOSE' else 'smvID'} '{gid}' is not unique")
+                label = "GoID" if kind == "GOOSE" else "smvID"
+                foreign = [r for r in lst if gid.replace(".", "$GO$").replace("$GO$GO$", "$GO$") != r
+                           and not gid.startswith(r.split("/")[0] + "/")]
+                hint = (f" – {len(foreign)} of them carry a {label} that names another IED, which usually means a copied "
+                        f"IED configuration; subscribers that check the {label} may accept the wrong stream") if foreign else ""
+                add("warning", kind, "", ", ".join(lst), f"{label} '{gid}' is used by {len(lst)} control blocks{hint}")
 
         for ied in self.ieds.values():
             if ied.get("profile") != "ABB CI868":
@@ -448,7 +473,7 @@ class SclModel:
             both = sorted(set(goose_src) | set(mms_srv))
             L = CI868_LIMITS
             add("info", "CI868", ied["name"], ied["name"],
-                f"CI868 module load: GOOSE from {len(goose_src)} IEDs, MMS reports from {len(mms_srv)} IEDs, "
+                f"{ied['name']}: CI868 module load: GOOSE from {len(goose_src)} IEDs, MMS reports from {len(mms_srv)} IEDs, "
                 f"{len(both)} different IEDs in total")
             if len(goose_src) > L["goose"]:
                 add("error", "CI868", ied["name"], ied["name"],
