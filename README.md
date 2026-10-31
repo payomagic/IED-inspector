@@ -1,9 +1,9 @@
-# IED Inspector 0.5.2
+# IED Inspector 0.6.1
 
 Read-only IEC 61850 inspection tool: MMS, GOOSE, Sampled Values, SCD validation, comparison, reports and an IED simulator. Runs in the browser and is served by a small local Python program. Nothing to install apart from Python.
 
 
-[![PyPI](https://img.shields.io/pypi/v/ied-inspector)](https://pypi.org/project/ied-inspector/) ![Python](https://img.shields.io/pypi/pyversions/ied-inspector) ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
+[![PyPI](https://img.shields.io/pypi/v/ied-inspector)](https://pypi.org/project/ied-inspector/) ![Release date]([https://img.shields.io/pypi/pyversions/ied-inspector](https://img.shields.io/github/release-date/payomagic/IED-inspector)) ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
 Install and start:
 
