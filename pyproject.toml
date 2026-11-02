@@ -26,6 +26,9 @@ classifiers = [
 ]
 dependencies = []                   # standard library only
 
+[project.optional-dependencies]
+gui = ["pywebview>=5.0"]            # desktop window mode: pip install "ied-inspector[gui]"
+
 # Fill in after creating the repository, e.g. https://github.com/<user>/ied-inspector
 # [project.urls]
 # Homepage = "https://github.com/<user>/ied-inspector"
@@ -35,12 +38,13 @@ dependencies = []                   # standard library only
 ied-inspector = "ied_inspector.app:main"
 
 [tool.setuptools]
-packages = ["ied_inspector", "ied_inspector.web", "ied_inspector.examples"]
+packages = ["ied_inspector", "ied_inspector.web", "ied_inspector.examples", "ied_inspector.assets"]
 include-package-data = true
 
 [tool.setuptools.package-data]
 "ied_inspector.web" = ["*.html"]
 "ied_inspector.examples" = ["*.scd"]
+"ied_inspector.assets" = ["*.png", "*.ico"]
 
 [tool.setuptools.dynamic]
 version = { attr = "ied_inspector.__version__" }

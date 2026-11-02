@@ -44,7 +44,8 @@ class Session:
         self.log = []
         self.scd_history = []
         self.sim_history = []
-        self.settings = {"backend": "builtin", "libPath": "", "timeout": 5.0, "autoProbe": True, "probeInterval": 30}
+        self.settings = {"backend": "builtin", "libPath": "", "timeout": 5.0, "autoProbe": True, "probeInterval": 30,
+                         "uiMode": "ask"}
         self._load_settings()
         self.pcap_seq = 0
 
@@ -313,6 +314,7 @@ class Api:
             dev.test_flag = bool(body["test"])
         if "simulation" in body:
             dev.simulation_bit = bool(body["simulation"])
+        dev.apply_mode()
         for p in dev.goose:
             p.trigger()
         S.sim_history.append({"ts": time.time(), "text": f"{body['key']}: test={dev.test_flag} simulation={dev.simulation_bit}"})
@@ -347,7 +349,7 @@ class Api:
     @staticmethod
     def settings(q, body):
         if body:
-            for k in ("backend", "libPath", "timeout", "autoProbe", "probeInterval"):
+            for k in ("backend", "libPath", "timeout", "autoProbe", "probeInterval", "uiMode"):
                 if k in body:
                     S.settings[k] = body[k]
             S.save_settings()
@@ -373,8 +375,52 @@ POST_ROUTES = {"/api/connect": Api.connect, "/api/connect-all": Api.connect_all,
 RAW_ROUTES = {"/api/scd": Api.scd_load, "/api/pcap": Api.pcap_load}
 
 
+# ---------------------------------------------------------------------------
+# Request protection (CSRF / DNS rebinding)
+#   * Every /api/ and /report/ request must carry the per-session token (header X-IED-Token,
+#     or ?t=<token> for download links). The token is only written into the page served by
+#     this server; other web sites cannot read it (same-origin policy).
+#   * The Host header must be one of our own addresses (blocks DNS-rebinding attacks).
+#   * Cross-site requests (Origin / Sec-Fetch-Site of another site) are refused.
+# ---------------------------------------------------------------------------
+import secrets  # noqa: E402
+
+SESSION_TOKEN = secrets.token_urlsafe(32)
+ALLOWED_HOSTS = {"127.0.0.1", "localhost", "[::1]"}
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = f"IEDInspector/{__version__}"
+
+    def _host_ok(self):
+        host = (self.headers.get("Host") or "").strip().lower()
+        name = host.rsplit(":", 1)[0] if not host.endswith("]") else host
+        return name in ALLOWED_HOSTS
+
+    def _origin_ok(self):
+        if (self.headers.get("Sec-Fetch-Site") or "").lower() == "cross-site":
+            return False
+        origin = self.headers.get("Origin")
+        if not origin or origin == "null":
+            return origin != "null"
+        o = urllib.parse.urlparse(origin)
+        return (o.hostname or "").lower() in {h.strip("[]") for h in ALLOWED_HOSTS} and o.port == self.server.server_port
+
+    def _token_ok(self, q):
+        t = self.headers.get("X-IED-Token") or (q.get("t") or [""])[0]
+        return secrets.compare_digest(t, SESSION_TOKEN)
+
+    def _guard(self, q, needs_token):
+        if not self._host_ok():
+            self._send(421, "Misdirected request: unknown Host", "text/plain")
+            return False
+        if not self._origin_ok():
+            self._send(403, "Cross-site request refused", "text/plain")
+            return False
+        if needs_token and not self._token_ok(q):
+            self._send(403, "Missing or invalid session token. Reload the page.", "text/plain")
+            return False
+        return True
 
     def log_message(self, fmt, *args):
         pass
@@ -398,9 +444,21 @@ class Handler(BaseHTTPRequestHandler):
         u = urllib.parse.urlparse(self.path)
         q = urllib.parse.parse_qs(u.query)
         try:
+            if not self._guard(q, needs_token=not (u.path in ("/", "/index.html"))):
+                return
             if u.path in ("/", "/index.html"):
                 with open(os.path.join(WEB_DIR, "index.html"), "rb") as f:
-                    return self._send(200, f.read(), "text/html; charset=utf-8")
+                    page = f.read().replace(b"__IED_SESSION_TOKEN__", SESSION_TOKEN.encode())
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(page)))
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("X-Frame-Options", "DENY")
+                self.send_header("Content-Security-Policy", "frame-ancestors 'none'")
+                self.send_header("Referrer-Policy", "no-referrer")
+                self.end_headers()
+                self.wfile.write(page)
+                return
             if u.path == "/api/state":
                 import hashlib
                 body = reports.to_json(Api.state(q, {})).encode()
@@ -431,6 +489,8 @@ class Handler(BaseHTTPRequestHandler):
         q = urllib.parse.parse_qs(u.query)
         length = int(self.headers.get("Content-Length") or 0)
         raw = self.rfile.read(length) if length else b""
+        if not self._guard(q, needs_token=True):
+            return
         try:
             if u.path in RAW_ROUTES:
                 return self._json(RAW_ROUTES[u.path](q, {}, raw))
@@ -488,35 +548,110 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, "unknown report", "text/plain")
 
 
+def _running_instance(port):
+    """Return 'version x' if an IED Inspector answers on this port, else None."""
+    import urllib.request
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=1) as r:
+            if r.headers.get("Server", "").startswith("IEDInspector/"):
+                return "version " + r.headers["Server"].split("/", 1)[1].split()[0]
+    except Exception:
+        pass
+    return None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="IED Inspector – read-only IEC 61850 MMS/GOOSE/SV inspection tool")
     ap.add_argument("--host", default="127.0.0.1", help="address for the web interface (default 127.0.0.1)")
-    ap.add_argument("--port", type=int, default=8061, help="port for the web interface (default 8061)")
-    ap.add_argument("--no-browser", action="store_true", help="do not open a browser window")
+    ap.add_argument("--port", type=int, default=None, help="port for the web interface (default 8061; random in desktop mode)")
+    ap.add_argument("--no-browser", action="store_true", help="web mode without opening a browser (server only)")
+    mode = ap.add_mutually_exclusive_group()
+    mode.add_argument("--gui", action="store_true", help="open as a desktop window (needs pywebview)")
+    mode.add_argument("--web", action="store_true", help="open in the web browser")
+    mode.add_argument("--ask", action="store_true", help="show the start-up dialog even if a choice was remembered")
+    ap.add_argument("--diag", action="store_true", help="print desktop-mode diagnostics and exit")
     ap.add_argument("--scd", help="load this SCD file at start")
     a = ap.parse_args(argv)
+
+    # ---- choose desktop window or browser
+    from . import desktop
+    if a.diag:
+        print(desktop.diagnostics(), flush=True)
+        return
+    if a.no_browser or a.web:
+        ui = "web"
+    elif a.gui:
+        ok, why = desktop.desktop_available()
+        ui = "gui" if ok else "web"
+        if not ok:
+            print(f"Desktop window not available: {why}. Using the browser instead.", flush=True)
+    else:
+        ui, remember = desktop.choose_mode("ask" if a.ask else S.settings.get("uiMode", "ask"))
+        if ui is None:
+            return
+        if remember:
+            S.settings["uiMode"] = ui
+            S.save_settings()
+    if a.port is None:
+        a.port = 0 if ui == "gui" else 8061
 
     if a.scd:
         with open(a.scd, "rb") as f:
             Api.scd_load({"name": [os.path.basename(a.scd)]}, {}, f.read())
     threading.Thread(target=_probe_loop, daemon=True).start()
-    try:
-        httpd = ThreadingHTTPServer((a.host, a.port), Handler)
-    except OSError as e:
-        print(f"Cannot start the web interface on {a.host}:{a.port}: {e}")
-        print("Is IED Inspector already running? Use --port to choose another port.")
+    if a.host not in ("127.0.0.1", "localhost", "::1"):
+        # remote access was requested explicitly: also accept this computer's own names / addresses
+        ALLOWED_HOSTS.update({a.host.lower(), socket.gethostname().lower(), socket.getfqdn().lower()})
+        try:
+            ALLOWED_HOSTS.update(i["ips"][0] for i in list_interfaces() if i["ips"])
+        except Exception:
+            pass
+    httpd, port = None, a.port
+    for port in ([0] if a.port == 0 else range(a.port, a.port + 20)):
+        try:
+            httpd = ThreadingHTTPServer((a.host, port), Handler)
+            port = httpd.server_address[1]
+            break
+        except OSError:
+            other = _running_instance(port)
+            if other:
+                print(f"NOTE: port {port} is used by another IED Inspector ({other}). "
+                      f"That one keeps running; close its window if it is an old version.", flush=True)
+            else:
+                print(f"NOTE: port {port} is in use by another program.", flush=True)
+    if httpd is None:
+        print(f"Cannot start the web interface on ports {a.port}–{a.port + 19}. Use --port to choose another port.")
         sys.exit(1)
     httpd.daemon_threads = True
-    url = f"http://{'127.0.0.1' if a.host in ('0.0.0.0', '') else a.host}:{a.port}/"
+    url = f"http://{'127.0.0.1' if a.host in ('0.0.0.0', '') else a.host}:{port}/"
     print(f"IED Inspector {__version__} – open {url} in your browser.", flush=True)
     print("Keep this window open while you use the tool. Close it (or press Ctrl+C) to quit.", flush=True)
     if a.host not in ("127.0.0.1", "localhost"):
         print("WARNING: the web interface is reachable from the network. There is no login.")
-    S.event("session started")
-    if not a.no_browser:
-        threading.Timer(0.8, lambda: webbrowser.open(url)).start()
+    S.event(f"session started ({'desktop window' if ui == 'gui' else 'web browser'})")
     try:
-        httpd.serve_forever()
+        if ui == "gui":
+            threading.Thread(target=httpd.serve_forever, daemon=True).start()
+            try:
+                desktop.run_window(url)            # blocks until the window is closed
+                return
+            except (Exception, SystemExit) as e:
+                import traceback as _tb
+                lp = desktop.log(f"desktop window failed: {e!r}\n{_tb.format_exc()}\n{desktop.diagnostics()}")
+                desktop.show_console()
+                print(f"\nDesktop window could not be opened: {e}\nDetails: {lp}\n"
+                      f"Opening the web browser instead ({url}).", flush=True)
+                desktop.error_box("IED Inspector – desktop window",
+                                  f"The desktop window could not be opened:\n\n{e}\n\nThe tool now opens in your web "
+                                  f"browser instead.\nDetails were written to:\n{lp}\n\n"
+                                  f"Tip: run 'IEDInspector.exe --diag' to check the installation.")
+                webbrowser.open(url)
+                httpd_thread_wait = threading.Event()
+                httpd_thread_wait.wait()           # keep serving until Ctrl+C / console closed
+        else:
+            if not a.no_browser:
+                threading.Timer(0.8, lambda: webbrowser.open(url)).start()
+            httpd.serve_forever()
     except KeyboardInterrupt:
         pass
     finally:

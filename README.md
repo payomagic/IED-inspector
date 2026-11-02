@@ -1,14 +1,26 @@
-# IED Inspector 0.6.1
+# IED Inspector 0.7.2
 
 Read-only IEC 61850 inspection tool: MMS, GOOSE, Sampled Values, SCD validation, comparison, reports and an IED simulator. Runs in the browser and is served by a small local Python program. Nothing to install apart from Python.
 
 
-[![PyPI](https://img.shields.io/pypi/v/ied-inspector)](https://pypi.org/project/ied-inspector/) ![Release date](https://img.shields.io/github/release-date/payomagic/IED-inspector) ![License: MIT](https://img.shields.io/badge/license-MIT-blue)]
+[![PyPI](https://img.shields.io/pypi/v/ied-inspector)](https://pypi.org/project/ied-inspector/) ![Python](https://img.shields.io/pypi/pyversions/ied-inspector) ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
 Install and start:
 
-    pip install ied-inspector
+    pip install "ied-inspector[gui]"     # with the desktop window (pywebview)
+    pip install ied-inspector            # browser only, no dependencies at all
     ied-inspector
+
+At start a small dialog asks whether to open the tool as a **desktop window** or in the **web browser**. Both show the same interface. "Remember my choice" skips the dialog next time; you can change this in Settings, or start with `--ask`.
+
+| Option | Effect |
+|---|---|
+| `--gui` | desktop window (Windows: Edge WebView2, built into Windows 10/11; Linux: GTK + WebKit2, e.g. `apt install python3-gi gir1.2-webkit2-4.1`) |
+| `--web` | web browser |
+| `--ask` | show the start dialog again |
+| `--no-browser` | web server only, no window |
+
+If the desktop window cannot be opened (no WebView2, no display, pywebview missing), the tool shows the reason, writes details to `ied_inspector.log` next to the program, and opens the browser instead. `IEDInspector.exe --diag` (or `ied-inspector --diag`) checks everything the desktop window needs: pywebview, pythonnet, the WebView2 DLLs, the installed WebView2 runtime and the window icon. If the window icon is ever the problem, start with the environment variable `IED_INSPECTOR_NO_ICON=1`.
 
 ## Start
 
@@ -32,6 +44,9 @@ Requirements: Python 3.9 or newer, standard library only. A portable Python (for
 - **Connect (MMS)**: reads identity, every GOOSE and SV control block (VLAN ID, priority, APPID, destination MAC, ConfRev, GoID, DataSet, GoEna) and the dataset values. You can choose the source interface, and read all IEDs of the SCD in one click.
 - **Network**: live capture on a selected interface, or analysis of a .pcap/.pcapng file. It detects GOOSE timeouts against TAL, the TEST flag, the simulation bit, NdsCom, stNum/sqNum errors and VLAN changes. For SV it reports frames per second and smpCnt gaps. If all frames arrive untagged, it warns about switch port mode or NIC VLAN offload. A live capture can be saved as .pcap.
 - **SCD file**: loads .scd/.cid/.icd/.iid files and validates them. Checks cover the VLAN-ID range and 3-digit hex format, APPID and MAC ranges, duplicate APPID/MAC/IP/GoID, missing GSE/SMV addresses, missing or empty datasets, FCDAs that don't exist in the data model, and subscriptions to unknown IEDs or control blocks. A green or red LED shows MMS reachability for each IED.
+- **Device view** (Compare → Device): for every IED, the VLANs it uses are shown as chips (e.g. "VLAN 706 · sends 1 · receives 3"), plus the list of VLANs its switch port needs. Below that are two lists:
+  - **Publishes**: its own control blocks.
+  - **Receives**: every incoming GOOSE/SV stream, with VLAN, publisher and IP, APPID, the signals it uses (from the SCD ExtRefs), status on the network, and reception confirmed over MMS (LGOS/LSVS or vendor diagnostics). Also exported as CSV ("VLANs per device") and in the HTML comparison report.
 - **Compare**: shows SCD vs device (MMS) vs network for every field. The view can be organized by device, VLAN, IP or signal. A VLAN matrix shows, per device, which VLANs it publishes and subscribes to (the switch-port VLAN list). Subscribers are marked when the publisher's real VLAN differs from the SCD. If the SCD is loaded after reading or capturing, everything is re-validated automatically.
 - **Subscriber reception (VLAN path check over MMS)**: the tool reads every **LGOS** (GOOSE) and **LSVS** (SV) subscription-supervision node it finds on a connected IED (IEC 61850-7-4 Ed2). It reports St (receiving yes/no), SimSt, LastStNum and expected/received ConfRev, and links each one to the publisher's control block. If a subscriber does not receive a stream that is published on VLAN X, the subscriber is marked red with "check that VLAN X is allowed on the subscriber's switch port and on all trunks". This proves the VLAN path end to end without a laptop on every switch. IEDs without LGOS/LSVS (Ed1 or vendor-specific supervision) are listed as "cannot be confirmed over MMS".
 - **ABB vendor supervision**: for devices without LGOS/LSVS the app reads ABB's own receive diagnostics.
@@ -44,6 +59,8 @@ Requirements: Python 3.9 or newer, standard library only. A portable Python (for
   - SCD check of the module load against the CI868A data sheet: at most 120 IEDs via GOOSE, 40 IEDs as MMS report client (from ReportControl ClientLN), and 40 IEDs when both are combined.
   - The demo SCD contains a CI868 (PMS_CI868) that publishes a load-shedding GOOSE, subscribes to PROT_Q01 and CTRL_Q01, and receives reports from PROT_Q01.
 - **Reachability for all devices**: the LED is green when MMS answers, amber when the host is up but MMS does not answer, and red when there is no answer at all.
+- **Test and simulation mode** (MMS and network): the TEST badge appears when `LLN0.Mod/Beh` reads test **or** when the device's own GOOSE frames carry the TEST flag on the network. It says which of the two detected it, and flags any mismatch. "SIM FRAMES" marks devices that publish with the simulation bit.
+- **Test and simulation mode over MMS**: for every logical device the tool reads `LLN0.Mod` / `LLN0.Beh` (on, blocked, test, test/blocked, off) and `LPHD.Sim`. Simulation mode means the IED accepts simulated GOOSE/SV instead of the real ones. Devices with test or simulation mode active get a **TEST** / **SIMULATION** badge on their tile and in the device view, plus a warning. Each subscription additionally shows `SimSt` from LGOS/LSVS. The simulator's TEST and simulation checkboxes set these values too.
 - **Data model export** (Connect → Data model): every MMS variable name of the IED as a text file. Useful for finding vendor-specific diagnostics.
 - **Simulator**: any IED of the SCD can be simulated with a read-only MMS server, GOOSE publishing (with retransmission) and 9-2 sampled values (sine waves). You can change signal values, which triggers GOOSE, and toggle the TEST and simulation bits. A simulated IED that has LGOS/LSVS nodes really listens on the interface and updates them. Its "VLANs allowed on this IED's switch port" field emulates a port that is missing a VLAN. For testing the checks you can stop a stream to provoke a timeout, or override its VLAN to provoke a mismatch. Use one IP per simulated IED: 127.0.0.x works locally, or add secondary IPs to the network adapter.
 - **Reports**: comparison report (HTML, CSV for control blocks, signals and findings, JSON), a per-connection report (HTML, text, JSON), and a session summary of everything done since the program started.
@@ -97,7 +114,10 @@ Vendor-specific behaviour (ABB GSEGGIO1 counters, 670-series receive blocks, CI8
 
 ## Security
 
-The web interface listens on 127.0.0.1 only, unless you start it with `--host`. It has no login, so do not expose it to untrusted networks. Report security problems privately to the author instead of in a public issue.
+- The web interface listens on 127.0.0.1 only, unless you start it with `--host`. In desktop mode it uses a random port.
+- **Cross-site request protection:** every API and download request must carry a random per-session token. The token is only written into the page this server delivers, so other web sites you visit cannot use the API: they cannot start the simulator, capture traffic or read data. Requests with a foreign `Origin`, `Sec-Fetch-Site: cross-site` or an unknown `Host` header (DNS rebinding) are refused.
+- There is no login, so do not expose it to untrusted networks with `--host`.
+- Report security problems privately to the author instead of in a public issue.
 
 ## License
 

@@ -35,7 +35,7 @@ if not exist ".build-venv\Scripts\python.exe" (
 set "VPY=.build-venv\Scripts\python.exe"
 echo Installing / updating PyInstaller ...
 "%VPY%" -m pip install --disable-pip-version-check --quiet --upgrade pip || goto :fail
-"%VPY%" -m pip install --disable-pip-version-check --quiet "pyinstaller>=6.3" || goto :fail
+"%VPY%" -m pip install --disable-pip-version-check --quiet "pyinstaller>=6.3" "pywebview>=5.0" || goto :fail
 
 rem ---- build ------------------------------------------------------------------
 echo Building IEDInspector.exe ...
@@ -46,6 +46,14 @@ if exist dist\IEDInspector.exe del /q dist\IEDInspector.exe
   --icon "assets\IEDInspector.ico" ^
   --add-data "ied_inspector\web;ied_inspector\web" ^
   --add-data "ied_inspector\examples;ied_inspector\examples" ^
+  --add-data "ied_inspector\assets;ied_inspector\assets" ^
+  --hidden-import webview.platforms.edgechromium ^
+  --hidden-import webview.platforms.winforms ^
+  --collect-data webview ^
+  --collect-binaries webview ^
+  --collect-all clr_loader ^
+  --collect-all pythonnet ^
+  --hidden-import clr ^
   --collect-submodules ied_inspector ^
   run.py || goto :fail
 
@@ -60,7 +68,11 @@ echo.
 echo ===========================================================================
 echo  Done:  %cd%\dist\IEDInspector.exe
 echo  Copy this single file to the target PC and double-click it.
-echo  The browser opens http://127.0.0.1:8061 ; keep the console window open.
+echo  A start dialog asks: desktop window or web browser (IEDInspector.exe --gui / --web skip it).
+echo  Desktop mode uses Microsoft Edge WebView2 (built into Windows 10/11).
+echo.
+echo  Checking the desktop mode of the new exe:
+dist\IEDInspector.exe --diag
 echo  Options:  IEDInspector.exe --help
 echo ===========================================================================
 pause

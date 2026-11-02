@@ -153,7 +153,7 @@
   </IED>
   <DataTypeTemplates>
     <LNodeType id="LLN0_T" lnClass="LLN0"><DO name="Mod" type="ENC_Mod"/><DO name="Beh" type="ENS_Beh"/><DO name="Health" type="ENS_Health"/><DO name="NamPlt" type="LPL_T"/></LNodeType>
-    <LNodeType id="LPHD_T" lnClass="LPHD"><DO name="PhyNam" type="DPL_T"/><DO name="PhyHealth" type="ENS_Health"/><DO name="Proxy" type="SPS_T"/></LNodeType>
+    <LNodeType id="LPHD_T" lnClass="LPHD"><DO name="PhyNam" type="DPL_T"/><DO name="PhyHealth" type="ENS_Health"/><DO name="Proxy" type="SPS_T"/><DO name="Sim" type="SPC_T"/></LNodeType>
     <LNodeType id="PTRC_T" lnClass="PTRC"><DO name="Beh" type="ENS_Beh"/><DO name="Str" type="ACD_T"/><DO name="Op" type="ACT_T"/><DO name="Tr" type="ACT_T"/></LNodeType>
     <LNodeType id="XCBR_T" lnClass="XCBR"><DO name="Beh" type="ENS_Beh"/><DO name="Pos" type="DPC_T"/><DO name="BlkOpn" type="SPC_T"/><DO name="BlkCls" type="SPC_T"/></LNodeType>
     <LNodeType id="CSWI_T" lnClass="CSWI"><DO name="Beh" type="ENS_Beh"/><DO name="Pos" type="DPC_T"/></LNodeType>

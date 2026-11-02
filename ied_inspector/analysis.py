@@ -1,6 +1,8 @@
 """Joins SCD, MMS and on-the-wire data, compares them and builds views per
 control block, signal, VLAN, device and IP. Recomputed on demand, so an SCD
 loaded later validates everything that was collected before."""
+import os
+import re
 import time
 from collections import defaultdict
 
@@ -17,6 +19,22 @@ def norm_ref(ref):
         ld, rest = ref.split("/", 1)
         return ld + "/" + rest.replace(".", "$")
     return ref.replace(".", "$")
+
+
+LD_SUFFIX = re.compile(r"(LD0|LD\d+|CTRL|PROT|MEAS|MET|DR|SUPV|SUP|CON|CMD|APP\d*|SYS|LN0)$", re.I)
+
+
+def ied_name_from_domains(domains):
+    """IEC 61850 LD names are <IEDname><LDinst>: the common prefix of all LDs is the IED name.
+    With a single LD, strip a well-known LD instance suffix (LD0, CTRL, PROT, …)."""
+    doms = [d for d in domains if d]
+    if not doms:
+        return None
+    if len(doms) > 1:
+        p = os.path.commonprefix(doms)
+        return p if len(p) >= 3 else None
+    base = LD_SUFFIX.sub("", doms[0])
+    return base if len(base) >= 3 else doms[0]
 
 
 def vlanTxt(v):
@@ -88,11 +106,30 @@ def analyze(scl=None, connections=None, trackers=None, probes=None, now=None):
     conn_dev = {}
     for ip, c in latest.items():
         name = ip_to_ied.get(ip) or next((ld_to_ied[d] for d in c.get("domains", []) if d in ld_to_ied), None)
-        conn_dev[ip] = name or (c.get("identity") or {}).get("model") or ip
+        conn_dev[ip] = name or ied_name_from_domains(c.get("domains", [])) or \
+            (f"{(c.get('identity') or {}).get('model')} @ {ip}" if (c.get("identity") or {}).get("model") else ip)
+    # two different IPs must never be merged into one device just because their names look alike
+    seen = defaultdict(list)
+    for ip, n in conn_dev.items():
+        seen[n].append(ip)
+    for n, ips in seen.items():
+        if len(ips) > 1 and n not in (scl.ieds if scl else {}):
+            for ip in ips:
+                conn_dev[ip] = f"{n} @ {ip}"
+        elif len(ips) > 1:
+            for ip in ips:
+                if ip != (scl.ieds[n].get("ip") if scl else None):
+                    conn_dev[ip] = f"{n} @ {ip}"
     for ip, c in latest.items():
         for cb in c.get("gocbs", []) + c.get("svcbs", []):
             ref = norm_ref(cb["ref"])
+            prev = rows.get(ref)
+            if prev is not None and prev["mms"] and prev.get("readFrom") not in (None, ip):
+                # same reference read from another IP (e.g. two simulators from one CID) – keep both
+                ref = f"{ref} @ {ip}"
             r = row(ref, cb["kind"])
+            r["name"] = cb.get("name") or r["name"]
+            r["ld"] = cb.get("domain") or r["ld"]
             r["mms"] = {k: cb.get(k) for k in ("vlanId", "vlanPriority", "appId", "mac", "confRev", "id", "datSet",
                                                "enabled", "ndsCom", "minTime", "maxTime", "error")}
             r["mms"]["datSet"] = norm_ref(r["mms"]["datSet"])
@@ -303,8 +340,25 @@ def analyze(scl=None, connections=None, trackers=None, probes=None, now=None):
             d = devices[name] = {"name": name, "ip": None, "inScd": False, "reachable": None, "identity": {},
                                  "publishes": set(), "subscribes": set(), "cbs": [], "status": "ok",
                                  "findings": [], "lastRead": None, "desc": None, "type": None, "readFrom": None,
-                                 "profile": None, "hostUp": None}
+                                 "profile": None, "hostUp": None, "mode": [], "simulation": None, "testMode": None}
         return d
+
+    def _inbound(sd, r, v, via, signal=None, receiving=None, receiving_ln=None, device_level=False):
+        """Collect the streams a device receives (from SCD ExtRefs and from LGOS/LSVS/vendor supervision)."""
+        ib = sd.setdefault("_in", {}).get(r["ref"])
+        if ib is None:
+            ib = sd["_in"][r["ref"]] = {
+                "ref": r["ref"], "name": r["name"], "kind": r["kind"], "publisher": r["device"],
+                "publisherIp": r.get("readFrom") or r["ip"], "vlanId": v,
+                "vlanBySource": {n: r[n].get("vlanId") for n in ("scd", "mms", "wire") if r[n]},
+                "appId": r["effective"]["appId"], "mac": r["effective"]["mac"],
+                "pubStatus": r["pubStatus"], "net": (r["wire"] or {}).get("status"),
+                "signals": [], "receiving": None, "receivingLn": None, "deviceLevel": False, "via": set()}
+        ib["via"].add(via)
+        if signal and signal not in ib["signals"]:
+            ib["signals"].append(signal)
+        if via == "supervision" and (ib["receiving"] is None or ib["deviceLevel"]):
+            ib["receiving"], ib["receivingLn"], ib["deviceLevel"] = receiving, receiving_ln, device_level
 
     if scl:
         for ied in scl.ieds.values():
@@ -322,6 +376,8 @@ def analyze(scl=None, connections=None, trackers=None, probes=None, now=None):
         for sv in r["supervision"]:
             sd = dev(sv["device"])
             sd["subscribes"].add(v if v is not None else "untagged")
+            _inbound(sd, r, v, "supervision", receiving=sv.get("st"),
+                     receiving_ln=sv.get("ln"), device_level=bool(sv.get("deviceLevel")))
             if sv.get("st") is False:
                 msg = f"does not receive {r['ref']} (VLAN {vlanTxt(v)}) – LGOS/LSVS St = false"
                 sd["findings"].insert(0, msg)
@@ -332,6 +388,7 @@ def analyze(scl=None, connections=None, trackers=None, probes=None, now=None):
         for s in r["subscribers"]:
             sd = dev(s["device"])
             sd["subscribes"].add(v if v is not None else "untagged")
+            _inbound(sd, r, v, "scd", signal=s["signal"])
             sv = (r["scd"] or {}).get("vlanId")
             if sv is not None and v is not None and sv != v:
                 msg = f"subscribes to {r['ref']} which is configured for VLAN {sv} in the SCD but published on VLAN {v}"
@@ -340,6 +397,30 @@ def analyze(scl=None, connections=None, trackers=None, probes=None, now=None):
                 findings.append({"severity": "error", "category": "VLAN", "device": s["device"], "object": r["ref"], "message": msg})
     for ip, c in latest.items():
         d = dev(conn_dev[ip])
+        d["mode"] = c.get("mode", [])
+        sim = [m for m in d["mode"] if m.get("sim")]
+        test = [m for m in d["mode"] if m.get("beh") in ("test", "test/blocked") or m.get("mod") in ("test", "test/blocked")]
+        off = [m for m in d["mode"] if m.get("beh") in ("off", "blocked") or m.get("mod") in ("off", "blocked")]
+        d["simulation"], d["testMode"] = bool(sim), bool(test)
+        if sim:
+            msg = (f"SIMULATION mode is ON ({sim[0]['ld']}/{sim[0]['simLn']}.Sim = true) – the IED accepts simulated "
+                   f"GOOSE/SV instead of the real ones; switch it off after testing")
+            d["findings"].insert(0, msg)
+            d["status"] = worst(d["status"], "warning")
+            findings.append({"severity": "warning", "category": "Test / simulation", "device": d["name"],
+                             "object": f"{sim[0]['ld']}/{sim[0]['simLn']}", "message": msg})
+        for m in test:
+            msg = f"logical device {m['ld']} is in TEST mode (Mod={m['mod']}, Beh={m['beh']}) – its GOOSE carry the TEST flag"
+            d["findings"].insert(0, msg)
+            d["status"] = worst(d["status"], "warning")
+            findings.append({"severity": "warning", "category": "Test / simulation", "device": d["name"],
+                             "object": m["ld"], "message": msg})
+        for m in off:
+            msg = f"logical device {m['ld']} is {m['beh'] or m['mod']} (Mod={m['mod']}, Beh={m['beh']})"
+            d["findings"].append(msg)
+            d["status"] = worst(d["status"], "warning")
+            findings.append({"severity": "warning", "category": "Test / simulation", "device": d["name"],
+                             "object": m["ld"], "message": msg})
         d["readFrom"] = ip
         d["ip"] = d["ip"] or ip
         d["identity"] = c.get("identity") or {}
@@ -363,6 +444,34 @@ def analyze(scl=None, connections=None, trackers=None, probes=None, now=None):
                 devices[name]["hostUp"] = p.get("hostUp") if not p.get("reachable") else True
                 if p.get("identity"):
                     devices[name]["identity"] = p["identity"]
+    # ---- TEST / simulation flag seen in the device's own GOOSE/SV frames on the network
+    for d in devices.values():
+        own_wire = [r for r in rows.values() if r["device"] == d["name"] and r["wire"]]
+        test_net = [r for r in own_wire if r["wire"].get("test")]
+        sim_net = [r for r in own_wire if r["wire"].get("simulation")]
+        src = []
+        if d.get("testMode"):
+            src.append("MMS")
+        if test_net:
+            src.append("network")
+            if not d.get("testMode"):
+                beh = ", ".join(f"{m['ld']}: Beh={m.get('beh')}" for m in d.get("mode", [])) or "not read over MMS"
+                msg = (f"publishes GOOSE with the TEST flag ({', '.join(r['name'] for r in test_net)}) – the IED is in "
+                       f"test mode; MMS mode: {beh}")
+                d["findings"].insert(0, msg)
+                d["status"] = worst(d["status"], "warning")
+                findings.append({"severity": "warning", "category": "Test / simulation", "device": d["name"],
+                                 "object": test_net[0]["ref"], "message": msg})
+            d["testMode"] = True
+        d["testSource"] = src
+        if sim_net:
+            msg = (f"publishes frames with the SIMULATION bit ({', '.join(r['name'] for r in sim_net)}) – "
+                   f"subscribers in simulation mode will use these instead of the real values")
+            d["findings"].insert(0, msg)
+            d["status"] = worst(d["status"], "warning")
+            findings.append({"severity": "warning", "category": "Test / simulation", "device": d["name"],
+                             "object": sim_net[0]["ref"], "message": msg})
+            d["simFrames"] = True
     for d in devices.values():
         if d["reachable"] is False and not d.get("hostUp"):
             if any(r["device"] == d["name"] and r["wire"] and r["wire"]["status"] == "ok" for r in rows.values()):
@@ -380,6 +489,35 @@ def analyze(scl=None, connections=None, trackers=None, probes=None, now=None):
             alive = [r for r in rows.values() if r["device"] == d["name"] and r["wire"] and r["wire"]["status"] == "ok"]
             if alive:
                 d["findings"].append(f"CI868 publishes {len(alive)} GOOSE stream(s) on the network")
+        inbound = []
+        for ib in (d.pop("_in", None) or {}).values():
+            ib["via"] = sorted(ib["via"])
+            scd_v = ib["vlanBySource"].get("scd")
+            vlan_diff = len({x for x in ib["vlanBySource"].values() if x is not None}) > 1
+            if ib["receiving"] is False:
+                st = "error"
+            elif vlan_diff:
+                st = "error"
+            elif ib["net"] == "timeout":
+                st = "error"
+            else:
+                st = worst(ib["pubStatus"], "ok")
+            ib["status"] = st
+            ib["vlanMismatch"] = vlan_diff
+            ib["scdVlan"] = scd_v
+            inbound.append(ib)
+        d["inbound"] = sorted(inbound, key=lambda x: (str(x["vlanId"]), x["publisher"] or "", x["name"]))
+        # VLAN usage of this device: which VLANs it sends on, which it receives on, and what
+        use = {}
+        for r in rows.values():
+            if r["device"] == d["name"]:
+                k = r["effective"]["vlanId"]
+                use.setdefault(k, {"vlan": k, "publishes": [], "subscribes": []})["publishes"].append(r["name"])
+        for ib in d["inbound"]:
+            k = ib["vlanId"]
+            use.setdefault(k, {"vlan": k, "publishes": [], "subscribes": []})["subscribes"].append(
+                f"{ib['publisher']} {ib['name']}")
+        d["vlanUse"] = sorted(use.values(), key=lambda u: (u["vlan"] is None, u["vlan"] or 0))
         pubs = {v for v in d["publishes"] if v != "untagged"}
         d["requiredVlans"] = sorted({v for v in (d["publishes"] | d["subscribes"]) if isinstance(v, int)})
         d["publishes"] = sorted(d["publishes"], key=str)
