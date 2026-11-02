@@ -351,6 +351,25 @@ class SimDevice:
         if self.server:
             self.server.stop()
 
+    def apply_mode(self):
+        """Reflect the TEST / simulation checkboxes in the data model (LLN0.Mod/Beh, LPHD.Sim)."""
+        import re as _re
+        from .ber import UtcTime
+        beh = 3 if self.test_flag else 1
+        for ld, dom in self.model.domains.items():
+            for do in ("Mod", "Beh"):
+                n = self.model.lookup(ld, f"LLN0$ST${do}$stVal")
+                if isinstance(n, Leaf):
+                    n.value = beh
+            for ln_name, _ in dom.children:
+                if _re.match(r"^[A-Za-z0-9_]*LPHD\d*$", ln_name):
+                    n = self.model.lookup(ld, f"{ln_name}$ST$Sim$stVal")
+                    if isinstance(n, Leaf):
+                        n.value = bool(self.simulation_bit)
+                        t = self.model.lookup(ld, f"{ln_name}$ST$Sim$t")
+                        if isinstance(t, Leaf):
+                            t.value = UtcTime(time.time())
+
     def set_value(self, ref, value):
         """ref = 'LD/LN$FC$DO$DA'. Updates the value and fires GOOSE for affected datasets."""
         ld, item = ref.split("/", 1)

@@ -70,6 +70,17 @@ def comparison_html(a, scd_name=None):
                  f"<td>{'<br>'.join(e(x) for x in d['findings'][:6])}</td></tr>")
     b.append("</table>")
 
+    b.append("<h2>VLANs per device – what each IED sends and receives</h2>")
+    for d in a["devices"]:
+        if not d.get("vlanUse"):
+            continue
+        b.append(f"<h3>{badge(d['status'])} {e(d['name'])} <small>{e(d.get('ip'))} · switch port needs VLAN "
+                 f"{e(', '.join(map(str, d['requiredVlans'])) or '–')}</small></h3>")
+        b.append("<table><tr><th>VLAN</th><th>Sends (own control blocks)</th><th>Receives (publisher · control block)</th></tr>")
+        for u in d["vlanUse"]:
+            b.append(f"<tr><td><b>{e(u['vlan'] if u['vlan'] is not None else 'not set')}</b></td>"
+                     f"<td>{e(', '.join(u['publishes']))}</td><td>{'<br>'.join(e(x) for x in u['subscribes'])}</td></tr>")
+        b.append("</table>")
     b.append("<h2>Control blocks – SCD vs device (MMS) vs network</h2>")
     for r in a["controlBlocks"]:
         b.append(f"<h3>{badge(r['status'])} {e(r['device'])} · <code>{e(r['ref'])}</code> ({e(r['kind'])})</h3>")
@@ -130,6 +141,14 @@ def comparison_csv(a, table="controlblocks"):
         for s in a["signals"]:
             w.writerow([s["device"], s["ip"], s["cb"], s["index"], s["ref"], s["vlanId"], s["scdRef"], s["mmsRef"],
                         s["mmsValue"], s["wireValue"], ",".join(s["subscribers"]), s["status"], s["note"]])
+    elif table == "devicevlans":
+        w.writerow(["device", "ip", "vlan", "direction", "control_block", "publisher", "status"])
+        for d in a["devices"]:
+            for r in a["controlBlocks"]:
+                if r["device"] == d["name"]:
+                    w.writerow([d["name"], d.get("ip"), r["effective"]["vlanId"], "sends", r["ref"], d["name"], r["pubStatus"]])
+            for ib in d.get("inbound", []):
+                w.writerow([d["name"], d.get("ip"), ib["vlanId"], "receives", ib["ref"], ib["publisher"], ib["status"]])
     elif table == "findings":
         w.writerow(["severity", "category", "device", "object", "message"])
         for f in a["findings"]:
@@ -180,6 +199,14 @@ def connection_html(c):
                 for m in g["members"]:
                     b.append(f"<tr><td>{m['index']}</td><td><code>{e(m['ref'])}</code></td><td>{e(m['text'])}</td></tr>")
                 b.append("</table>")
+    if c.get("mode"):
+        b.append("<h2>Operating mode</h2><table><tr><th>Logical device</th><th>LLN0.Mod</th><th>LLN0.Beh</th>"
+                 "<th>LPHD.Sim</th><th>Result</th></tr>")
+        for m in c["mode"]:
+            res = "<br>".join(badge("warning") + " " + e(f) for f in m.get("flags", [])) or badge("ok") + " normal"
+            b.append(f"<tr><td><code>{e(m['ld'])}</code></td><td>{e(m.get('mod'))}</td><td>{e(m.get('beh'))}</td>"
+                     f"<td>{e(m.get('sim'))} <code>{e(m.get('simLn') or '')}</code></td><td>{res}</td></tr>")
+        b.append("</table>")
     if c.get("supervision"):
         b.append("<h2>Subscription supervision (LGOS / LSVS)</h2><table><tr><th>LN</th><th>Supervised control block</th>"
                  "<th>Receiving</th><th>Last stNum</th><th>ConfRev exp./rx</th><th>SimSt</th></tr>")
@@ -218,6 +245,11 @@ def connection_text(c):
         lines.append(f"   ID {g.get('id')}  DataSet {g.get('datSet')}")
         for m in g.get("members", []):
             lines.append(f"     [{m['index']}] {m['ref']} = {m['text']}")
+    if c.get("mode"):
+        lines += ["", "Operating mode:"]
+        for m in c["mode"]:
+            lines.append(f"  {m['ld']:<24} Mod={m.get('mod')} Beh={m.get('beh')} Sim={m.get('sim')}"
+                         + (f"   <-- {'; '.join(m['flags'])}" if m.get("flags") else ""))
     if c.get("supervision"):
         lines += ["", "Subscription supervision (LGOS/LSVS):"]
         for x in c["supervision"]:

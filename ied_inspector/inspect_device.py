@@ -107,6 +107,59 @@ def host_alive(ip, timeout=1.0):
         return False, "no answer on TCP 102 (ping not available)"
 
 
+BEH = {1: "on", 2: "blocked", 3: "test", 4: "test/blocked", 5: "off"}
+LPHD_RE = re.compile(r"^[A-Za-z0-9_]*LPHD\d*$")
+
+
+def read_mode(cli, dom, names, log):
+    """Operating mode of one logical device: LLN0.Mod/Beh (test, test/blocked, off …) and
+    LPHD.Sim (simulation mode = the IED accepts simulated GOOSE/SV instead of the real ones)."""
+    nameset = set(names)
+    out = {"ld": dom, "mod": None, "beh": None, "sim": None, "simLn": None}
+
+    def rd(item):
+        # Read directly: many IEDs list only LN / DO level names in GetNameList, so a leaf
+        # like LLN0$ST$Mod$stVal is often missing from the list although it can be read.
+        try:
+            v = cli.read(dom, item)
+        except Exception:
+            v = None
+        if v is None or hasattr(v, "code"):          # not readable / DataAccessError
+            parent = item.rsplit("$", 1)[0]          # fall back to the data object, take stVal from it
+            try:
+                tree = name_values(cli.get_type(dom, parent), cli.read(dom, parent))
+                v = tree.get("stVal") if isinstance(tree, dict) else None
+            except Exception:
+                v = None
+        return None if v is None or hasattr(v, "code") else v
+
+    if any(n == "LLN0" or n.startswith("LLN0$") for n in names) or not names:
+        for key, item in (("mod", "LLN0$ST$Mod$stVal"), ("beh", "LLN0$ST$Beh$stVal")):
+            v = rd(item)
+            if isinstance(v, int) and not isinstance(v, bool):
+                out[key] = BEH.get(v, str(v))
+    lphds = [ln for ln in names if "$" not in ln and LPHD_RE.match(ln)]
+    if not lphds and any(n.startswith("LPHD1") for n in names):
+        lphds = ["LPHD1"]
+    for ln in lphds:
+        v = rd(f"{ln}$ST$Sim$stVal")
+        if isinstance(v, bool):
+            out["sim"], out["simLn"] = v, ln
+            break
+    if out["mod"] is None and out["beh"] is None and out["sim"] is None:
+        return []
+    flags = []
+    if out["beh"] in ("test", "test/blocked") or out["mod"] in ("test", "test/blocked"):
+        flags.append(f"TEST mode (Mod={out['mod']}, Beh={out['beh']})")
+    if out["beh"] in ("off", "blocked") or out["mod"] in ("off", "blocked"):
+        flags.append(f"logical device {out['beh'] or out['mod']}")
+    if out["sim"]:
+        flags.append(f"SIMULATION mode ({out['simLn']}.Sim = true)")
+    out["flags"] = flags
+    log.append(f"{dom}: Mod={out['mod']} Beh={out['beh']} Sim={out['sim']}" + (f" -> {'; '.join(flags)}" if flags else ""))
+    return [out]
+
+
 def make_client(backend, ip, port, timeout, local_ip=None, lib_path=None):
     if backend == "libiec61850":
         from .backend_libiec61850 import LibIec61850Client
@@ -145,7 +198,7 @@ def inspect(ip, port=102, timeout=5.0, backend="builtin", local_ip=None, lib_pat
     t0 = time.time()
     rec = {"ip": ip, "port": port, "backend": backend, "started": t0, "ok": False,
            "identity": {}, "domains": [], "gocbs": [], "svcbs": [], "supervision": [], "vendorSupervision": [],
-           "model": {}, "log": [], "error": None}
+           "model": {}, "mode": [], "log": [], "error": None}
     cli = None
     try:
         cli = make_client(backend, ip, port, timeout, local_ip, lib_path)
@@ -191,6 +244,7 @@ def inspect(ip, port=102, timeout=5.0, backend="builtin", local_ip=None, lib_pat
                     cb["error"] = str(e)
                 (rec["gocbs"] if is_go else rec["svcbs"]).append(cb)
             rec["model"][dom] = names
+            rec["mode"] += read_mode(cli, dom, names, cli.log)
             rec["supervision"] += read_supervision(cli, dom, names, cli.log)
             try:
                 from .vendor_supervision import read_vendor_supervision
